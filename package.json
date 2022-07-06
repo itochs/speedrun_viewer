@@ -1,0 +1,31 @@
+{
+  "name": "speedrun_viewer",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/itochs/speedrun_viewer.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/itochs/speedrun_viewer/issues"
+  },
+  "homepage": "https://github.com/itochs/speedrun_viewer#readme",
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^1.3.2",
+    "prettier": "^2.7.1",
+    "vite": "^2.9.13"
+  }
+}
