@@ -1,16 +1,13 @@
 import { useEffect, useState } from "react";
 import * as d3 from "d3";
 
-function getRunData(data) {
-  console.log("------ get run data");
-  console.log(JSON.stringify(data, null, 1));
+function parseData(data) {
+  // console.log("------ get run data");
+  // console.log(JSON.stringify(data, null, 1));
   const runs = data["data"]["runs"];
   const sortruns = d3
     .sort(runs, (d) => new Date(d["run"]["status"]["verify-date"]))
     .filter((item) => item["run"]["status"]["verify-date"] !== null);
-  // console.log(dateYears);
-  // console.log(sortruns);
-  // console.log(test);
   const years = [
     ...new Set(
       sortruns.map((item) => {
@@ -19,6 +16,12 @@ function getRunData(data) {
     ),
   ];
 
+  console.log(sortruns);
+  const players = sortruns
+    .map((item) => item["run"]["players"].map((info) => info["id"]))
+    .flat();
+  console.log(players);
+  console.log(new Set(players));
   // console.log(only);
   const month = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
   const runData = years.map((year) => {
@@ -86,15 +89,36 @@ function App() {
 
   useEffect(() => {
     (async () => {
-      const response = await fetch(
-        "https://www.speedrun.com/api/v1/leaderboards/smw/category/96_Exit"
+      // const response = await fetch(
+      //   "https://www.speedrun.com/api/v1/leaderboards/smw/category/96_Exit"
+      // );
+      // run
+      // const runRes = await fetch(
+      //   "https://www.speedrun.com/api/v1/runs?game=smw"
+      // );
+      // const runResJson = await runRes.json();
+      // console.log(JSON.stringify(runResJson, null, 1));
+      // console.log(runResJson);
+      // game res
+      const gameRes = await fetch(
+        "https://www.speedrun.com/api/v1/games?max=1000&_bulk=yes&name=mario&orderby=similarity"
       );
-      if (!response.ok) {
-        throw new Error("Network response was not ok.");
-      }
-      const resJson = await response.json();
-      // console.log(JSON.stringify(resJson, null, 1));
-      setData(resJson);
+      const gameResJson = await gameRes.json();
+      console.log(JSON.stringify(gameResJson, null, 1));
+      console.log(
+        gameResJson["data"]
+          .map((item) => {
+            // if (item["names"]["japanese"] != null) {
+            return item["names"];
+            // }
+          })
+          .filter((item) => item["japanese"] != null)
+      );
+      // if (!response.ok) {
+      //   throw new Error("Network response was not ok.");
+      // }
+
+      // setData(resJson);
     })();
   }, []);
 
@@ -104,7 +128,7 @@ function App() {
   // console.log(data);
   const graphWidth = 600;
   const graphHeight = 600;
-  const runData = getRunData(data);
+  // const runData = parseData(data);
   // console.log(JSON.stringify(runData, null, 1));
   // const xScale = d3
   //   .scaleLinear()
