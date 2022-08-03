@@ -1,92 +1,121 @@
 import { useEffect, useState } from "react";
 import * as d3 from "d3";
 
-async function getRunData() {
-  try {
-    const response = await fetch(
-      "https://www.speedrun.com/api/v1/leaderboards/smw/category/96_Exit"
-    );
+function getRunData(data) {
+  console.log("------ get run data");
+  console.log(JSON.stringify(data, null, 1));
+  const runs = data["data"]["runs"];
+  const sortruns = d3
+    .sort(runs, (d) => new Date(d["run"]["status"]["verify-date"]))
+    .filter((item) => item["run"]["status"]["verify-date"] !== null);
+  // console.log(dateYears);
+  // console.log(sortruns);
+  // console.log(test);
+  const years = [
+    ...new Set(
+      sortruns.map((item) => {
+        return new Date(item["run"]["status"]["verify-date"]).getFullYear();
+      })
+    ),
+  ];
 
-    if (!response.ok) {
-      throw new Error("Network response was not ok.");
-    }
-
-    const resJson = await response.json();
-    console.log(JSON.stringify(resJson, null, 1));
-    const runs = resJson["data"]["runs"];
-    const sortruns = runs
-      .sort(
-        (a, b) =>
-          new Date(a["run"]["status"]["verify-date"]) -
-          new Date(b["run"]["status"]["verify-date"])
-      )
-      .filter((item) => item["run"]["status"]["verify-date"] !== null);
-    // console.log(dateYears);
-    const setYears = [
-      ...new Set(
-        sortruns.map((item) => {
-          return new Date(item["run"]["status"]["verify-date"]).getFullYear();
-        })
-      ),
-    ];
-
-    // console.log(only);
-    const month = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
-    const data = setYears.map((year) => {
-      const yearData = sortruns.filter((item) => {
-        const date = new Date(item["run"]["status"]["verify-date"]);
-        return date.getFullYear() === year;
-      });
-      return {
-        year,
-        len: yearData.length,
-        months: month.map((m) => {
-          const monthData = yearData.filter((item) => {
-            // console.log(item["run"]["status"]["verify-date"]);
-            const date = new Date(item["run"]["status"]["verify-date"]);
-            // console.log();
-            return date.getMonth() === m - 1;
-          });
-          return {
-            month: m,
-            len: monthData.length,
-            data: monthData,
-          };
-        }),
-      };
+  // console.log(only);
+  const month = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
+  const runData = years.map((year) => {
+    const yearData = sortruns.filter((item) => {
+      const date = new Date(item["run"]["status"]["verify-date"]);
+      return date.getFullYear() === year;
     });
-    // console.log(data);
-    console.log(JSON.stringify(data, null, 1));
-    return data;
-  } catch (error) {
-    console.error(error);
-  }
+    return {
+      year,
+      len: yearData.length,
+      months: month.map((m) => {
+        const monthData = yearData.filter((item) => {
+          // console.log(item["run"]["status"]["verify-date"]);
+          const date = new Date(item["run"]["status"]["verify-date"]);
+          // console.log();
+          return date.getMonth() === m - 1;
+        });
+        return {
+          month: m,
+          len: monthData.length,
+          data: monthData,
+        };
+      }),
+    };
+  });
+  // console.log(data);
+  console.log(runData);
+  return runData;
+}
+
+function TrendChart(data) {
+  // console.log(props);
+  // console.log(data);
+  return (
+    <svg viewBox="0 0 400 400">
+      <g>
+        <rect x={10} y={10} width={100} height={100} />
+      </g>
+    </svg>
+  );
+}
+
+function StackChart() {
+  <svg viewBox="0 0 600 600">
+    <g transform="translate(10 0)">
+      {data.map((item, i) => {
+        // console.log(yScale(i));
+        return (
+          <rect
+            key={i}
+            x={xScale(i)}
+            y={yScale(item["len"])}
+            width={50}
+            height={graphHeight - yScale(item["len"])}
+            fill="pink"
+          />
+        );
+      })}
+    </g>
+  </svg>;
 }
 
 function App() {
   const [data, setData] = useState();
 
   useEffect(() => {
-    getRunData().then((data) => {
-      setData(data);
-    });
+    (async () => {
+      const response = await fetch(
+        "https://www.speedrun.com/api/v1/leaderboards/smw/category/96_Exit"
+      );
+      if (!response.ok) {
+        throw new Error("Network response was not ok.");
+      }
+      const resJson = await response.json();
+      // console.log(JSON.stringify(resJson, null, 1));
+      setData(resJson);
+    })();
   }, []);
+
   if (data == null) {
     return <p>loading</p>;
   }
   // console.log(data);
   const graphWidth = 600;
   const graphHeight = 600;
-  const xScale = d3
-    .scaleLinear()
-    .domain([0, data.length])
-    .range([0, graphWidth])
-    .nice();
-  const yScale = d3
-    .scaleLinear()
-    .domain(d3.extent(data, (item) => item["len"]))
-    .range([graphHeight, 0])
-    .nice();
+  const runData = getRunData(data);
+  // console.log(JSON.stringify(runData, null, 1));
+  // const xScale = d3
+  //   .scaleLinear()
+  //   .domain([0, data.length])
+  //   .range([0, graphWidth])
+  //   .nice();
+  // const yScale = d3
+  //   .scaleLinear()
+  //   .domain(d3.extent(data, (item) => item["len"]))
+  //   .range([graphHeight, 0])
+  //   .nice();
 
   /*
       To see how stack.value can be used, consider a dataset formatted as follows:
@@ -116,47 +145,8 @@ function App() {
     <div>
       <h1>Hello, World!</h1>
       <div>
-        <svg viewBox="0 0 600 600">
-          <g transform="translate(10 0)">
-            {data.map((item, i) => {
-              // console.log(yScale(i));
-              return (
-                <rect
-                  key={i}
-                  x={xScale(i)}
-                  y={yScale(item["len"])}
-                  width={50}
-                  height={graphHeight - yScale(item["len"])}
-                  fill="pink"
-                />
-              );
-            })}
-          </g>
-        </svg>
-        {/* <svg viewBox="0 0 600 600">
-          <g transform="translate(10 0)">
-            {stackedData.map((item, i) => {
-              // console.log(item);
-              return (
-                <g>
-                  {item.map((ite) => {
-                    console.log(ite.data);
-                    return (
-                      <rect
-                        key={i}
-                        x={0}
-                        y={0}
-                        width={50}
-                        height={50}
-                        fill="pink"
-                      />
-                    );
-                  })}
-                </g>
-              );
-            })}
-          </g>
-        </svg> */}
+        <TrendChart {...{ data }} />
+        {/* <StackChart /> */}
       </div>
     </div>
     // </Suspense>
