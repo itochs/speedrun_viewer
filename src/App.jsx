@@ -1,31 +1,58 @@
 import { useEffect, useState } from "react";
 import * as d3 from "d3";
 import api from "./api";
-import { svg } from "d3";
 
-function TrendChart(data) {
-  const yearData = data["yearData"];
+function TrendChart(props) {
+  // console.log(props);
+  // console.log(props["data"]);
+  const yearData = props["yearData"];
+  const runData = props["data"];
+  // console.log(yearData);
+  const t = d3
+    .scaleTime()
+    .domain(d3.extent(runData, (item) => item["submitted"]))
+    .range([0, 400]);
+
   const xScale = d3
     .scaleLinear()
-    .domain([0, yearData.length - 1])
+    .domain([0, (yearData.length - 1) * 12])
     .range([0, 400])
     .nice();
+  const lenData = yearData
+    .map((item) => {
+      return item["month"].map((mitem) => {
+        return mitem["len"];
+      });
+    })
+    .flat();
+  console.log(lenData);
   const yScale = d3
     .scaleLinear()
-    .domain(d3.extent(yearData, (item) => item["len"]))
+    .domain(d3.extent(lenData))
     .range([400, 0])
     .nice();
-  const lineItem = yearData.map((item, index) => {
-    return { label: xScale(index), value: yScale(item["len"]) };
-  });
+  // console.log(yScale);
+  const lineItem = yearData
+    .map((item, index) => {
+      // return { x: xScale(index), y: yScale(item["len"]) };
+      return item["month"].map((mitem, mindex) => {
+        return {
+          x: xScale(index * 12 + mindex),
+          y: yScale(mitem["len"]),
+        };
+      });
+    })
+    .flat();
+  // console.log("line item");
+  // console.log(lineItem);
   const line = d3
     .line()
-    .x((d) => d.label)
-    .y((d) => d.value)
+    .x((d) => d.x)
+    .y((d) => d.y)
     .curve(d3.curveLinear);
   const xTicks = yearData.map((item, index) => {
     return {
-      x: xScale(index),
+      x: xScale(index * 12),
       label: item["year"],
     };
   });
@@ -37,7 +64,7 @@ function TrendChart(data) {
   });
 
   return (
-    <svg viewBox="0 0 500 500">
+    <svg id="chart" viewBox="0 0 500 500">
       <g>
         <g transform="translate(50, 50)">
           <path
@@ -189,7 +216,7 @@ function App() {
     <div>
       <h1>Hello, World!</h1>
       <div>
-        <TrendChart {...{ yearData }} />
+        <TrendChart {...data} />
         {/* <StackChart /> */}
       </div>
     </div>

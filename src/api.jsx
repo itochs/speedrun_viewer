@@ -52,7 +52,8 @@ function getYearData(data, players) {
     return {
       year,
       len: yearData.length,
-      months: month.map((m) => {
+
+      month: month.map((m) => {
         const monthData = yearData.filter((item) => {
           return item["submitted"].getMonth() === m - 1;
         });
@@ -60,6 +61,8 @@ function getYearData(data, players) {
           month: m,
           len: monthData.length,
           data: monthData,
+          // date: monthData[0]["submitted"],
+          // len: monthData.length,
         };
       }),
     };
@@ -84,6 +87,8 @@ export default async function api() {
   const data = parseData(rundata);
   const players = getPlayers(data);
   const yearData = getYearData(data, players);
+  console.log("year data");
+  console.log(yearData);
 
   return { data, players, yearData };
 }
