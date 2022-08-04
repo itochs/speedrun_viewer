@@ -1,12 +1,13 @@
 import { useEffect, useState } from "react";
 import * as d3 from "d3";
 import api from "./api";
+import { svg } from "d3";
 
 function TrendChart(data) {
   const yearData = data["yearData"];
   const xScale = d3
     .scaleLinear()
-    .domain([0, yearData.length])
+    .domain([0, yearData.length - 1])
     .range([0, 400])
     .nice();
   const yScale = d3
@@ -22,36 +23,85 @@ function TrendChart(data) {
     .x((d) => d.label)
     .y((d) => d.value)
     .curve(d3.curveLinear);
-  // .curve(d3.curveBasis);
-  console.log("trend chart");
-  console.log(yearData);
+  const xTicks = yearData.map((item, index) => {
+    return {
+      x: xScale(index),
+      label: item["year"],
+    };
+  });
+  const yTicks = yScale.ticks().map((y) => {
+    return {
+      y: yScale(y),
+      label: y,
+    };
+  });
+
   return (
-    <svg viewBox="0 0 400 400">
+    <svg viewBox="0 0 500 500">
       <g>
-        {/* <rect x={10} y={10} width={100} height={100} /> */}
-        <g>
-          {yearData.map((item, index) => {
-            console.log(yScale(item["len"]));
-            console.log(item["len"]);
+        <g transform="translate(50, 50)">
+          <path
+            d={line(lineItem)}
+            fill={"none"}
+            stroke={"black"}
+            strokeWidth={"3"}
+          />
+        </g>
+        <g className="y-axis" transform="translate(50, 50)">
+          <line
+            x1={0}
+            y1={0}
+            x2={0}
+            y2={400}
+            stroke={"black"}
+            strokeWidth={1}
+          />
+          {yTicks.map((tick, index) => {
             return (
-              <g>
-                {/* <rect
-                  key={index}
-                  x={xScale(index)}
-                  y={yScale(item["len"])}
-                  width={10}
-                  height={400 - yScale(item["len"])}
-                  fill={"red"}
-                /> */}
-                <path
-                  d={line(lineItem)}
-                  fill={"none"}
-                  stroke={"black"}
-                  strokeWidth={"3"}
-                />
+              <g key={index} transform={`translate(0, ${tick.y})`}>
+                <line x1={0} y1={0} x2={-5} y2={0} stroke={"black"} />
+                <text
+                  x={-10}
+                  y={0}
+                  fontSize={12}
+                  textAnchor={"end"}
+                  dominantBaseline={"middle"}
+                  style={{ userSelect: "none" }}
+                >
+                  {tick.label}
+                </text>
               </g>
             );
           })}
+        </g>
+        <g className="x-axis" transform="translate(50, -50)">
+          <line
+            x1={0}
+            y1={500}
+            x2={500}
+            y2={500}
+            stroke={"black"}
+            strokeWidth={1}
+          />
+          <g className="x-axis-label">
+            {xTicks.map((tick, index) => {
+              return (
+                <g key={index} transform={`translate(${tick.x}, 500)`}>
+                  <line x1={0} y1={0} x2={0} y2={5} stroke={"black"} />
+                  <text
+                    x={0}
+                    y={10}
+                    fontSize={12}
+                    textAnchor={"middle"}
+                    dominantBaseline={"hanging"}
+                    style={{ userSelect: "none" }}
+                  >
+                    {tick.label}
+                  </text>
+                </g>
+              );
+            })}
+          </g>
         </g>
       </g>
     </svg>
