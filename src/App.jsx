@@ -3,12 +3,56 @@ import * as d3 from "d3";
 import api from "./api";
 
 function TrendChart(data) {
-  // console.log(props);
-  // console.log(data);
+  const yearData = data["yearData"];
+  const xScale = d3
+    .scaleLinear()
+    .domain([0, yearData.length])
+    .range([0, 400])
+    .nice();
+  const yScale = d3
+    .scaleLinear()
+    .domain(d3.extent(yearData, (item) => item["len"]))
+    .range([400, 0])
+    .nice();
+  const lineItem = yearData.map((item, index) => {
+    return { label: xScale(index), value: yScale(item["len"]) };
+  });
+  const line = d3
+    .line()
+    .x((d) => d.label)
+    .y((d) => d.value)
+    .curve(d3.curveLinear);
+  // .curve(d3.curveBasis);
+  console.log("trend chart");
+  console.log(yearData);
   return (
     <svg viewBox="0 0 400 400">
       <g>
-        <rect x={10} y={10} width={100} height={100} />
+        {/* <rect x={10} y={10} width={100} height={100} /> */}
+        <g>
+          {yearData.map((item, index) => {
+            console.log(yScale(item["len"]));
+            console.log(item["len"]);
+            return (
+              <g>
+                {/* <rect
+                  key={index}
+                  x={xScale(index)}
+                  y={yScale(item["len"])}
+                  width={10}
+                  height={400 - yScale(item["len"])}
+                  fill={"red"}
+                /> */}
+                <path
+                  d={line(lineItem)}
+                  fill={"none"}
+                  stroke={"black"}
+                  strokeWidth={"3"}
+                />
+              </g>
+            );
+          })}
+        </g>
       </g>
     </svg>
   );
@@ -88,12 +132,14 @@ function App() {
   //   console.log("stack");
   //   console.log(stackedData);
 
+  const { rundata, players, yearData } = data;
+  // console.log(data["yearData"]);
   return (
     // <Suspense fallback={<p>loading</p>}>
     <div>
       <h1>Hello, World!</h1>
       <div>
-        <TrendChart {...{ data }} />
+        <TrendChart {...{ yearData }} />
         {/* <StackChart /> */}
       </div>
     </div>
