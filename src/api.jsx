@@ -1,10 +1,3 @@
-function parseData(data) {
-  //   console.log("parse");
-  return data.map((item) => {
-    return (item["submitted"] = new Date(item["submitted"]));
-  });
-}
-
 async function getRunData() {
   const rundata = [];
   const max = 200;
@@ -44,31 +37,33 @@ function getYearData(data) {
       })
     ),
   ];
-  console.log(years);
+  //   console.log(years);
   const month = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
   const runData = years.map((year) => {
     const yearData = data.filter((item) => {
       // const date = new Date(item["submitted"]);
       return item["submitted"].getFullYear() === year;
     });
-    //   return {
-    //     year,
-    //     len: yearData.length,
-    //     months: month.map((m) => {
-    //       const monthData = yearData.filter((item) => {
-    //         // console.log(item["run"]["status"]["verify-date"]);
-    //         const date = new Date(item["run"]["status"]["verify-date"]);
-    //         // console.log();
-    //         return date.getMonth() === m - 1;
-    //       });
-    //       return {
-    //         month: m,
-    //         len: monthData.length,
-    //         data: monthData,
-    //       };
-    //     }),
-    //   };
+    return {
+      year,
+      len: yearData.length,
+      months: month.map((m) => {
+        const monthData = yearData.filter((item) => {
+          // console.log(item["run"]["status"]["verify-date"]);
+          // const date = new Date(item["run"]["status"]["verify-date"]);
+          // console.log();
+          return item["submitted"].getMonth() === m - 1;
+        });
+        return {
+          month: m,
+          len: monthData.length,
+          data: monthData,
+        };
+      }),
+    };
   });
+  console.log(runData);
+  return runData;
 }
 
 export default async function api() {
@@ -87,9 +82,6 @@ export default async function api() {
     offset += max;
   }
   console.log("rundata");
-  //   console.log(rundata);
-  //   const data = getRunData();
-  const data = parseData(rundata);
   const players = getPlayers(rundata);
   const yearData = getYearData(rundata);
   return { rundata, players, yearData };
