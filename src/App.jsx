@@ -1,18 +1,37 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import * as d3 from "d3";
 import api from "./api";
 
-function TrendChart(props) {
-  // console.log(props);
-  // console.log(props["data"]);
-  const yearData = props["yearData"];
-  const runData = props["data"];
-  // console.log(yearData);
-  const t = d3
-    .scaleTime()
-    .domain(d3.extent(runData, (item) => item["submitted"]))
-    .range([0, 400]);
+function ZoomableSVG({ children, width, height }) {
+  console.log("ZoomableSVG");
+  const [k, setK] = useState(1);
+  const [x, setX] = useState(0);
+  const [y, setY] = useState(0);
+  const svgRef = useRef();
+  useEffect(() => {
+    const zoom = d3
+      .zoom()
+      .scaleExtent([0.5, 3])
+      .translateExtent([
+        [0, 0],
+        [width, height],
+      ])
+      .on("zoom", (event) => {
+        const { x, y, k } = event.transform;
+        setK(k);
+        setX(x);
+        setY(y);
+      });
+    d3.select(svgRef.current).call(zoom);
+  }, []);
+  return (
+    <svg ref={svgRef} viewBox={`0 0 ${width + 100} ${height + 100}`}>
+      <g transform={`translate(${x}, 0) scale(${k})`}>{children}</g>
+    </svg>
+  );
+}
 
+function TrendChartContent({ widht, height, runData, yearData }) {
   const xScale = d3
     .scaleLinear()
     .domain([0, (yearData.length - 1) * 12])
@@ -62,76 +81,90 @@ function TrendChart(props) {
       label: y,
     };
   });
-
+  console.log("ChartContent");
   return (
-    <svg id="chart" viewBox="0 0 500 500">
-      <g>
-        <g transform="translate(50, 50)">
-          <path
-            d={line(lineItem)}
-            fill={"none"}
-            stroke={"black"}
-            strokeWidth={"3"}
-          />
-        </g>
-        <g className="y-axis" transform="translate(50, 50)">
-          <line
-            x1={0}
-            y1={0}
-            x2={0}
-            y2={400}
-            stroke={"black"}
-            strokeWidth={1}
-          />
-          {yTicks.map((tick, index) => {
-            return (
-              <g key={index} transform={`translate(0, ${tick.y})`}>
-                <line x1={0} y1={0} x2={-5} y2={0} stroke={"black"} />
-                <text
-                  x={-10}
-                  y={0}
-                  fontSize={12}
-                  textAnchor={"end"}
-                  dominantBaseline={"middle"}
-                  style={{ userSelect: "none" }}
-                >
-                  {tick.label}
-                </text>
-              </g>
-            );
-          })}
-        </g>
-        <g className="x-axis" transform="translate(50, -50)">
-          <line
-            x1={0}
-            y1={500}
-            x2={500}
-            y2={500}
-            stroke={"black"}
-            strokeWidth={1}
-          />
-          <g className="x-axis-label">
-            {xTicks.map((tick, index) => {
-              return (
-                <g key={index} transform={`translate(${tick.x}, 500)`}>
-                  <line x1={0} y1={0} x2={0} y2={5} stroke={"black"} />
-                  <text
-                    x={0}
-                    y={10}
-                    fontSize={12}
-                    textAnchor={"middle"}
-                    dominantBaseline={"hanging"}
-                    style={{ userSelect: "none" }}
-                  >
-                    {tick.label}
-                  </text>
-                </g>
-              );
-            })}
-          </g>
-        </g>
+    <g>
+      <g transform="translate(50, 50)">
+        <path
+          d={line(lineItem)}
+          fill={"none"}
+          stroke={"black"}
+          strokeWidth={"3"}
+        />
       </g>
-    </svg>
+      <XAxis {...{ xTicks }} />
+      <YAxis {...{ yTicks }} />
+    </g>
+  );
+}
+
+function XAxis({ xTicks }) {
+  <g className="x-axis" transform="translate(50, -50)">
+    <line x1={0} y1={400} x2={400} y2={400} stroke={"black"} strokeWidth={1} />
+    <g className="x-axis-label">
+      {xTicks.map((tick, index) => {
+        return (
+          <g key={index} transform={`translate(${tick.x}, 500)`}>
+            <line x1={0} y1={0} x2={0} y2={5} stroke={"black"} />
+            <text
+              x={0}
+              y={10}
+              fontSize={12}
+              textAnchor={"middle"}
+              dominantBaseline={"hanging"}
+              style={{ userSelect: "none" }}
+            >
+              {tick.label}
+            </text>
+          </g>
+        );
+      })}
+    </g>
+  </g>;
+}
+
+function YAxis({ yTicks }) {
+  return (
+    <g className="y-axis" transform="translate(50, 50)">
+      <line x1={0} y1={0} x2={0} y2={400} stroke={"black"} strokeWidth={1} />
+      {yTicks.map((tick, index) => {
+        return (
+          <g key={index} transform={`translate(0, ${tick.y})`}>
+            <line x1={0} y1={0} x2={-5} y2={0} stroke={"black"} />
+            <text
+              x={-10}
+              y={0}
+              fontSize={12}
+              textAnchor={"end"}
+              dominantBaseline={"middle"}
+              style={{ userSelect: "none" }}
+            >
+              {tick.label}
+            </text>
+          </g>
+        );
+      })}
+    </g>
+  );
+}
+
+function TrendChart(props) {
+  // console.log(props);
+  // console.log(props["data"]);
+  const yearData = props["yearData"];
+  const runData = props["data"];
+  // console.log(yearData);
+
+  // return <svg id="chart" ref={svgRef} viewBox="0 0 500 500"></svg>;
+  return (
+    <ZoomableSVG width={400} height={400}>
+      <TrendChartContent
+        width={400}
+        height={400}
+        runData={runData}
+        yearData={yearData}
+      />
+    </ZoomableSVG>
   );
 }
 
