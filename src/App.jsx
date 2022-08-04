@@ -39,55 +39,8 @@ function App() {
 
   useEffect(() => {
     (async () => {
-      // const response = await fetch(
-      //   "https://www.speedrun.com/api/v1/leaderboards/smw/category/96_Exit"
-      // );
-      // run
-      const rundata = [];
-      const max = 200;
-      let offset = 0;
-      while (rundata.length % max == 0 && rundata.length <= offset) {
-        const runRes = await fetch(
-          `https://www.speedrun.com/api/v1/runs?game=m1z3w2d0&orderby=verify-date&max=200&offset=${offset}`
-        );
-        const runResJson = await runRes.json();
-        // console.log(runResJson["data"]);
-        rundata.push(...runResJson["data"]);
-        offset += max;
-      }
-
-      // console.log(JSON.stringify(runResJson, null, 1));
-      // console.log(rundata);
-      const players = rundata
-        .map((item) => item["players"].map((info) => info["id"]))
-        .flat();
-      // console.log(players);
-      // console.log(new Set(players));
-      // game res
-      // const gameRes = await fetch(
-      //   "https://www.speedrun.com/api/v1/games?max=1000&_bulk=yes&name=mario&orderby=similarity"
-      // );
-      // const gameResJson = await gameRes.json();
-      // console.log(JSON.stringify(gameResJson, null, 1));
-      // console.log(
-      //   gameResJson["data"]
-      //     .map((item) => {
-      //       // if (item["names"]["japanese"] != null) {
-      //       return item["names"];
-      //       // }
-      //     })
-      //     .filter((item) => item["japanese"] != null)
-      // );
-      // console.log(gameResJson["data"][33]);
-      // if (!response.ok) {
-      //   throw new Error("Network response was not ok.");
-      // }
-
-      // setData(resJson);
-      console.log("api");
-      const { testdata = rundata, testplayers = players, yearData } = api();
-      console.log("testdata");
-      // console.log(testdata);
+      const result = await api();
+      setData(result);
     })();
   }, []);
 
@@ -97,7 +50,8 @@ function App() {
   // console.log(data);
   const graphWidth = 600;
   const graphHeight = 600;
-
+  console.log("api");
+  console.log(data);
   // const runData = parseData(data);
   // console.log(JSON.stringify(runData, null, 1));
   // const xScale = d3
