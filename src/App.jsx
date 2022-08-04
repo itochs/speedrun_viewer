@@ -1,56 +1,6 @@
 import { useEffect, useState } from "react";
 import * as d3 from "d3";
-
-function parseData(data) {
-  // console.log("------ get run data");
-  // console.log(JSON.stringify(data, null, 1));
-  const runs = data["data"]["runs"];
-  const sortruns = d3
-    .sort(runs, (d) => new Date(d["run"]["status"]["verify-date"]))
-    .filter((item) => item["run"]["status"]["verify-date"] !== null);
-  const years = [
-    ...new Set(
-      sortruns.map((item) => {
-        return new Date(item["run"]["status"]["verify-date"]).getFullYear();
-      })
-    ),
-  ];
-
-  console.log(sortruns);
-  const players = sortruns
-    .map((item) => item["run"]["players"].map((info) => info["id"]))
-    .flat();
-  console.log(players);
-  console.log(new Set(players));
-  // console.log(only);
-  const month = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
-  const runData = years.map((year) => {
-    const yearData = sortruns.filter((item) => {
-      const date = new Date(item["run"]["status"]["verify-date"]);
-      return date.getFullYear() === year;
-    });
-    return {
-      year,
-      len: yearData.length,
-      months: month.map((m) => {
-        const monthData = yearData.filter((item) => {
-          // console.log(item["run"]["status"]["verify-date"]);
-          const date = new Date(item["run"]["status"]["verify-date"]);
-          // console.log();
-          return date.getMonth() === m - 1;
-        });
-        return {
-          month: m,
-          len: monthData.length,
-          data: monthData,
-        };
-      }),
-    };
-  });
-  // console.log(data);
-  console.log(runData);
-  return runData;
-}
+import api from "./api";
 
 function TrendChart(data) {
   // console.log(props);
@@ -111,8 +61,8 @@ function App() {
       const players = rundata
         .map((item) => item["players"].map((info) => info["id"]))
         .flat();
-      console.log(players);
-      console.log(new Set(players));
+      // console.log(players);
+      // console.log(new Set(players));
       // game res
       // const gameRes = await fetch(
       //   "https://www.speedrun.com/api/v1/games?max=1000&_bulk=yes&name=mario&orderby=similarity"
@@ -134,6 +84,10 @@ function App() {
       // }
 
       // setData(resJson);
+      console.log("api");
+      const { testdata = rundata, testplayers = players, yearData } = api();
+      console.log("testdata");
+      // console.log(testdata);
     })();
   }, []);
 
@@ -143,6 +97,7 @@ function App() {
   // console.log(data);
   const graphWidth = 600;
   const graphHeight = 600;
+
   // const runData = parseData(data);
   // console.log(JSON.stringify(runData, null, 1));
   // const xScale = d3
