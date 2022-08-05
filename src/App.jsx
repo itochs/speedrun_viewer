@@ -5,8 +5,6 @@ import * as d3 from "d3";
 import api from "./api";
 
 function ZoomableLineChart({ ymData, width, height, margin, color }) {
-  console.log("ZoomableLineChart");
-  // console.log(ymData);
   const svgRef = useRef();
   const [currentZoom, setCurrentZoom] = useState();
   const [xTicksValue, setXTicksValue] = useState();
@@ -51,7 +49,6 @@ function ZoomableLineChart({ ymData, width, height, margin, color }) {
         Math.min(ymData.length - 1, newXScale.domain()[1]),
       ]);
       xScale.domain(newXScale.domain());
-      // console.log(newXScale.ticks());
       setXTicksValue(newXScale.ticks());
     }
 
@@ -77,19 +74,14 @@ function ZoomableLineChart({ ymData, width, height, margin, color }) {
       .attr("transform", `translate(${margin.left},${margin.top})`)
       .attr("d", newline);
 
-    console.log("len", ymData.length);
     const xAxis = d3.axisBottom(xScale).tickFormat((d, i) => {
-      console.log("d", d);
       if (d >= ymData.length || d < 0 || !Number.isInteger(d)) {
-        // console.log(ymData[d].year);
         return;
       }
-      console.log(ymData[d]);
       if (ymData[d] == undefined) {
         return;
       }
-      console.log("pathed d");
-      console.log(ymData[d]);
+
       return `${ymData[d].year}年${ymData[d].month}月`;
     });
     svg
@@ -181,7 +173,6 @@ function Selector({ setGameName, games }) {
         <button
           className="button is-dark"
           onClick={() => {
-            console.log(inputRef.current.value);
             setGameName(inputRef.current.value);
           }}
         >
@@ -208,9 +199,6 @@ function Selector({ setGameName, games }) {
     </div>
   );
 }
-// function DropDownItem(value){
-//   return
-// }
 
 function Header() {
   return (
@@ -257,26 +245,14 @@ function App() {
     games: null,
     loading: true,
   });
-  // const [ymData, setYmData] = useState({ data: null, loading: true });
-  // const [games, setGames] = useState({ data: null, loading: true });
   const [gameName, setGameName] = useState("super mario 64");
 
   useEffect(() => {
     (async () => {
       setData({ loading: true });
       const result = await api(gameName);
-      // console.log(gameName);
       const { ymData, games } = result;
-      console.log("app");
-      console.log(result);
-      console.log(games);
-      console.log(ymData);
       setData({ ymData, games, loading: false });
-      // setData({ ymData, games, loading: false });
-      // setGames({ data: games, loading: false });
-      // setYmData({ data: ymData, loading: false });
-      // console.log("effect");
-      // onTextChange(gameName);
     })();
   }, [gameName]);
 
@@ -284,7 +260,6 @@ function App() {
     return <p>loading</p>;
   }
 
-  // console.log(data);
   const margin = {
     top: 50,
     bottom: 50,
@@ -294,11 +269,8 @@ function App() {
   const color = {
     axis: "#022D39",
   };
-  console.log("app");
-  console.log(data);
-  // console.log(ymData);
+
   return (
-    // <div className="has-background-grey-dark">
     <div>
       <Header />
       <Selector {...{ setGameName, games: data["games"] }} />

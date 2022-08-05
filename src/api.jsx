@@ -10,9 +10,6 @@ async function getGameName(gamename, max = 10) {
     `https://www.speedrun.com/api/v1/games?_bulk=yes&name=${gamename}&orderby=similarity&max=${max}`
   );
   const runResJson = await runRes.json();
-  // offset += max;
-  // console.log(gamename);
-  // console.log(runResJson);
 
   return runResJson;
 }
@@ -88,8 +85,6 @@ function getYearData(data, players) {
       });
     })
     .flat();
-  // console.log(ymData);
-  // console.log(runData);
   return { runData, ymData };
 }
 
@@ -109,13 +104,9 @@ export default async function api(gamename) {
     );
     offset += max;
   }
-  console.log("api");
   const data = parseData(rundata);
-  console.log(data);
   const players = getPlayers(data);
   const { runData: yearData, ymData } = getYearData(data, players);
-
-  console.log(ymData);
 
   return { ymData, games };
 }
