@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from "react";
 import * as d3 from "d3";
 import api from "./api";
 import Axis from "./Axis";
-import { text } from "d3";
 
 function ZoomableSVG({ children, width, height, xScale, line, pathRef }) {
   // console.log("ZoomableSVG");
@@ -65,7 +64,6 @@ function TrendChartContent({ line, lineItem, xTicks, yTicks }) {
     <g transform="translate(50, 50)">
       <g>
         <path
-          // ref={pathRef}
           className="path"
           d={line(lineItem)}
           fill={"none"}
@@ -108,16 +106,11 @@ function TrendChartContent({ line, lineItem, xTicks, yTicks }) {
 }
 
 function TrendChart(props) {
-  // console.log(props);
-  // console.log(props["data"]);
   const yearData = props["yearData"];
-  const runData = props["data"];
-
-  // console.log(yearData);
 
   const xScale = d3
     .scaleLinear()
-    .domain([0, (yearData.length - 1) * 12])
+    .domain([0, yearData.length * 12])
     .range([0, 400])
     .nice();
   const lenData = yearData
@@ -127,16 +120,13 @@ function TrendChart(props) {
       });
     })
     .flat();
-  console.log(lenData);
   const yScale = d3
     .scaleLinear()
     .domain(d3.extent(lenData))
     .range([400, 0])
     .nice();
-  // console.log(yScale);
   const lineItem = yearData
     .map((item, index) => {
-      // return { x: xScale(index), y: yScale(item["len"]) };
       return item["month"].map((mitem, mindex) => {
         return {
           x: xScale(index * 12 + mindex),
@@ -146,9 +136,6 @@ function TrendChart(props) {
       });
     })
     .flat();
-  // console.log("line item");
-  console.log("line item");
-  console.log(lineItem);
   const line = d3
     .line()
     .x((d) => d.x)
@@ -168,7 +155,6 @@ function TrendChart(props) {
   });
 
   const pathRef = useRef();
-  // return <svg id="chart" ref={svgRef} viewBox="0 0 500 500"></svg>;
   return (
     <ZoomableSVG
       width={400}
@@ -195,21 +181,18 @@ function App() {
   if (data == null) {
     return <p>loading</p>;
   }
-  // console.log(data);
   const graphWidth = 600;
   const graphHeight = 600;
   console.log("api");
   console.log(data);
 
   const { rundata, players, yearData } = data;
-  // console.log(data["yearData"]);
   return (
     // <Suspense fallback={<p>loading</p>}>
     <div>
       <h1>Hello, World!</h1>
       <div>
         <TrendChart {...data} />
-        {/* <StackChart /> */}
       </div>
     </div>
     // </Suspense>
