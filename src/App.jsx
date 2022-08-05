@@ -4,87 +4,92 @@ import { useEffect, useRef, useState } from "react";
 import * as d3 from "d3";
 import api from "./api";
 
-function ZoomableLineChart({ ymData, width, height, margin }) {
+function ZoomableLineChart({ ymData, width, height, margin, color }) {
   console.log("ZoomableLineChart");
   const svgRef = useRef();
-  console.log(ymData);
   const [currentZoom, setCurrentZoom] = useState();
+
+  const xScale = d3
+    .scaleLinear()
+    .domain([0, ymData.length - 1])
+    .range([0, width - margin.left - margin.right])
+    .nice();
+  // const [xTicksState, setXTicksState] = useState(null);
   const yScale = d3
     .scaleLinear()
     .domain(d3.extent(ymData, (d) => d.len))
-    .range([height, 0])
+    .range([height - margin.top - margin.bottom, 0])
     .nice();
+  const line = d3
+    .line()
+    .x((d, i) => xScale(i))
+    .y((d) => yScale(d.len))
+    .curve(d3.curveLinear);
+  const newline = d3
+    .line()
+    .x((d, i) => xScale(i))
+    .y((d) => yScale(d.newbielen))
+    .curve(d3.curveLinear);
+
+  const yTicks = yScale.ticks().map((y) => {
+    return {
+      y: yScale(y),
+      label: y,
+    };
+  });
 
   useEffect(() => {
     const svg = d3.select(svgRef.current);
     const svgContent = svg.select(".content");
 
-    const xScale = d3
-      .scaleLinear()
-      .domain([0, ymData.length - 1])
-      .range([0, width])
-      .nice();
-
     if (currentZoom) {
       const newXScale = currentZoom.rescaleX(xScale);
-      //   console.log(xScale.domain());
-      //   console.log(newXScale.domain());
-      xScale.domain(newXScale.domain());
+      xScale.domain([
+        Math.max(0, newXScale.domain()[0]),
+        Math.min(ymData.length, newXScale.domain()[1]),
+      ]);
+      // xScale.domain(newXScale.domain());
     }
-
-    // console.log(ymData);
-
-    // console.log(lineItem);
-    const line = d3
-      .line()
-      .x((d, i) => xScale(i))
-      .y((d) => yScale(d.len))
-      .curve(d3.curveLinear);
 
     svgContent
       .select(".line")
       .data([ymData])
       .join("path")
-      // .attr("className", "myline")
-      .attr("stroke", "black")
+      .attr("stroke", "#022D39")
+      .attr("stroke-width", "3")
       .attr("fill", "none")
+      .attr("opacity", "0.5")
       .attr("transform", `translate(${margin.left},${margin.top})`)
       .attr("d", line);
-
-    const newline = d3
-      .line()
-      .x((d, i) => xScale(i))
-      .y((d) => yScale(d.newbielen))
-      .curve(d3.curveLinear);
 
     svgContent
       .select(".newline")
       .data([ymData])
       .join("path")
-      // .attr("className", "myline")
-      .attr("stroke", "black")
+      .attr("stroke", "#0794BD")
+      .attr("stroke-width", "3")
+      .attr("opacity", "0.5")
       .attr("fill", "none")
       .attr("transform", `translate(${margin.left},${margin.top})`)
       .attr("d", newline);
 
-    const xAxis = d3.axisBottom(xScale);
+    const xAxis = d3.axisBottom(xScale).tickFormat((d, i) => {
+      if (d < ymData.length) {
+        console.log(ymData[d].year);
+        return `${ymData[d].year}年${ymData[d].month}月`;
+      }
+    });
     svg
       .select(".x-axis")
-      .attr("transform", `translate(${margin.left}, ${height + margin.top})`)
+      .attr("transform", `translate(${margin.left}, ${height - margin.bottom})`)
       .call(xAxis);
-
-    const yAxis = d3.axisLeft(yScale);
-    svg
-      .select(".y-axis")
-      .attr("transform", `translate(${margin.left}, ${margin.left})`)
-      .call(yAxis);
 
     const zoomBehavior = d3
       .zoom()
       .scaleExtent([0.5, 5])
       .translateExtent([
         [margin.left, margin.top],
-        [width + margin.left, height + margin.top],
+        [width - margin.right, height - margin.bottom],
       ])
       .on("zoom", (event) => {
         const zoomState = event.transform;
@@ -94,22 +99,24 @@ function ZoomableLineChart({ ymData, width, height, margin }) {
     svg.call(zoomBehavior);
   }, [currentZoom]);
 
+  // if (xTicksState == null) {
+  //   return <p>loading</p>;
+  // }
+
   return (
-    <div>
+    <div className="has-background-success-ligh">
       <svg
         ref={svgRef}
-        viewBox={`0 0 ${width + margin.right + margin.left} ${
-          height + margin.bottom + margin.top
-        }`}
-        transform={`translate(${margin.left}, ${margin.top})`}
+        viewBox={`0 0 ${width} ${height}`}
+        // transform={`translate(${margin.left}, ${margin.top})`}
       >
         <defs>
           <clipPath id="clip">
             <rect
               x={margin.left}
               y={margin.top}
-              width={width}
-              height={height}
+              width={width - margin.left - margin.right}
+              height={height - margin.top - margin.bottom}
             />
           </clipPath>
         </defs>
@@ -117,8 +124,39 @@ function ZoomableLineChart({ ymData, width, height, margin }) {
           <path className="line"></path>
           <path className="newline"></path>
         </g>
-        <g className="x-axis"></g>
-        <g className="y-axis"></g>
+        <g
+          className="x-axis"
+          // transform={`translate(${margin.left}, ${height - margin.top})`}
+        ></g>
+        <g
+          className="y-axis"
+          transform={`translate(${margin.left}, ${margin.top})`}
+        >
+          <line
+            x1={0}
+            y1={0}
+            x2={0}
+            y2={height - margin.bottom - margin.top}
+            stroke={"black"}
+            strokeWidth={1}
+          />
+          {yTicks.map((item) => {
+            return (
+              <g transform={`translate(0, ${item.y})`}>
+                <line x1={0} y1={0} x2={-5} y2={0} stroke={"black"}></line>
+                <text
+                  x={-10}
+                  fontSize={12}
+                  textAnchor="end"
+                  dominantBaseline="middle"
+                >
+                  {item.label}
+                </text>
+                <rect x={0} y={0} r={5} fill={"red"}></rect>
+              </g>
+            );
+          })}
+        </g>
       </svg>
     </div>
   );
@@ -163,22 +201,25 @@ function App() {
     return <p>loading</p>;
   }
 
-  const { data: runs, players, yearData, ymData } = data;
+  const { ymData } = data;
   const margin = {
-    top: 50,
-    bottom: 50,
-    left: 50,
-    right: 50,
+    top: 25,
+    bottom: 25,
+    left: 25,
+    right: 25,
+  };
+  const color = {
+    axis: "#022D39",
   };
   // console.log(ymData);
   return (
     // <div className="has-background-grey-dark">
     <div>
-      {/* <Header />
-      <TrendChart {...{ data, width: 600, height: 300 }} />
-      <Footer /> */}
-      <ZoomableLineChart {...{ ymData, width: 600, height: 300, margin }} />
-      {/* <Chart {...{ data, width: 600, height: 300 }} /> */}
+      <Header />
+      <ZoomableLineChart
+        {...{ ymData, width: 600, height: 300, margin, color }}
+      />
+      <Footer />
     </div>
   );
 }
