@@ -43,7 +43,6 @@ function getYearData(data, players) {
       );
     })
   );
-  console.log(oldPlayers);
   const month = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
   const runData = years.map((year) => {
     const yearData = data.filter((item) => {
@@ -58,27 +57,16 @@ function getYearData(data, players) {
         const monthData = yearData.filter((item) => {
           return item["submitted"].getMonth() === m - 1;
         });
-        console.log("month");
-        // console.log(monthData);
-        // console.log(yearData);
         const newbie = monthData
           .map((item) => {
             const nothave = item.players.filter(({ id }) => {
-              // console.log(id);
               return !oldPlayers.has(id);
             });
-            // console.log(nothave);
             return nothave;
           })
           .flat();
-
-        // console.log("new");
-        // console.log(newbie);
-        // console.log("newbie");
-        // console.log(newbie);
         newbie.forEach(({ id }) => {
           oldPlayers.add(id);
-          // console.log(id);
         });
 
         return {
@@ -86,16 +74,10 @@ function getYearData(data, players) {
           len: monthData.length,
           newbielen: newbie.length,
           data: monthData,
-          // date: monthData[0]["submitted"],
-          // len: monthData.length,
         };
       }),
     };
   });
-  // console.log(oldPlayers);
-  // console.log(players);
-  // console.log([...oldPlayers] == [...players]);
-  console.log(runData);
   return runData;
 }
 
@@ -116,8 +98,6 @@ export default async function api() {
   const data = parseData(rundata);
   const players = getPlayers(data);
   const yearData = getYearData(data, players);
-  // console.log("year data");
-  // console.log(yearData);
 
   return { data, players, yearData };
 }

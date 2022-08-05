@@ -190,6 +190,16 @@ function TrendChart(props) {
   );
 }
 
+function Header() {
+  return (
+    <>
+      <header>
+        <h1>this is header</h1>
+      </header>
+    </>
+  );
+}
+
 function App() {
   const [data, setData] = useState();
 
