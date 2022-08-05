@@ -65,21 +65,30 @@ function TrendChartContent({ line, lineItem, xTicks, yTicks }) {
       <g>
         <path
           className="path"
-          d={line(lineItem)}
+          d={line(lineItem.new)}
+          fill={"none"}
+          stroke={"blue"}
+          strokeWidth={"2"}
+          opacity={0.5}
+        />
+        <path
+          className="path"
+          d={line(lineItem.all)}
           fill={"none"}
           stroke={"black"}
           strokeWidth={"3"}
+          opacity={0.5}
         />
       </g>
       <g>
-        {lineItem.map((item, index) => {
+        {lineItem.all.map((item, index) => {
           return (
             <g key={index} transform={`translate(${item.x}, 0)`}>
               <title>提出数 : {item.ylabel}</title>
               <rect
                 x={0}
                 y={0}
-                width={4}
+                width={2}
                 height={400}
                 fill={"red"}
                 opacity={index === hovered ? 0.5 : 0}
@@ -125,17 +134,30 @@ function TrendChart(props) {
     .domain(d3.extent(lenData))
     .range([400, 0])
     .nice();
-  const lineItem = yearData
-    .map((item, index) => {
-      return item["month"].map((mitem, mindex) => {
-        return {
-          x: xScale(index * 12 + mindex),
-          y: yScale(mitem["len"]),
-          ylabel: mitem["len"],
-        };
-      });
-    })
-    .flat();
+  const lineItem = {
+    all: yearData
+      .map((item, index) => {
+        return item["month"].map((mitem, mindex) => {
+          return {
+            x: xScale(index * 12 + mindex),
+            y: yScale(mitem["len"]),
+            ylabel: mitem["len"],
+          };
+        });
+      })
+      .flat(),
+    new: yearData
+      .map((item, index) => {
+        return item["month"].map((mitem, mindex) => {
+          return {
+            x: xScale(index * 12 + mindex),
+            y: yScale(mitem["newbielen"]),
+            ylabel: mitem["newbielen"],
+          };
+        });
+      })
+      .flat(),
+  };
   const line = d3
     .line()
     .x((d) => d.x)
@@ -181,19 +203,11 @@ function App() {
   if (data == null) {
     return <p>loading</p>;
   }
-  const graphWidth = 600;
-  const graphHeight = 600;
-  console.log("api");
-  console.log(data);
 
-  const { rundata, players, yearData } = data;
   return (
     // <Suspense fallback={<p>loading</p>}>
     <div>
-      <h1>Hello, World!</h1>
-      <div>
-        <TrendChart {...data} />
-      </div>
+      <TrendChart {...data} />
     </div>
     // </Suspense>
   );
