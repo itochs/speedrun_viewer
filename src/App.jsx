@@ -217,6 +217,7 @@ function App() {
   return (
     // <Suspense fallback={<p>loading</p>}>
     <div>
+      <Header />
       <TrendChart {...data} />
     </div>
     // </Suspense>
