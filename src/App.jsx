@@ -1,3 +1,5 @@
+import "bulma/css/bulma.css";
+
 import { useEffect, useRef, useState } from "react";
 import * as d3 from "d3";
 import api from "./api";
@@ -193,8 +195,12 @@ function TrendChart(props) {
 function Header() {
   return (
     <>
-      <header>
-        <h1>this is header</h1>
+      <header className="hero is-dark is-bold">
+        <div className="hero-body">
+          <div className="container">
+            <h1 className="title">this is header</h1>
+          </div>
+        </div>
       </header>
     </>
   );
@@ -202,8 +208,10 @@ function Header() {
 function Footer() {
   return (
     <>
-      <footer>
-        <p>this is footer</p>
+      <footer className="footer">
+        <div className="content has-text-centered">
+          <p>this is footer</p>
+        </div>
       </footer>
     </>
   );
