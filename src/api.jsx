@@ -78,7 +78,22 @@ function getYearData(data, players) {
       }),
     };
   });
-  return runData;
+
+  const ymData = runData
+    .map(({ year, month }) => {
+      return month.map(({ month, len, newbielen }) => {
+        return {
+          year,
+          month,
+          len,
+          newbielen,
+        };
+      });
+    })
+    .flat();
+  // console.log(ymData);
+  // console.log(runData);
+  return { runData, ymData };
 }
 
 export default async function api() {
@@ -97,7 +112,8 @@ export default async function api() {
   }
   const data = parseData(rundata);
   const players = getPlayers(data);
-  const yearData = getYearData(data, players);
+  const { runData: yearData, ymData } = getYearData(data, players);
+  // console.log(ymData);
 
-  return { data, players, yearData };
+  return { data, players, yearData, ymData };
 }

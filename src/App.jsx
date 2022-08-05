@@ -3,222 +3,124 @@ import "bulma/css/bulma.css";
 import { useEffect, useRef, useState } from "react";
 import * as d3 from "d3";
 import api from "./api";
-import Axis from "./Axis";
-import Chart from "./Chart";
 
-function ZoomableSVG({
-  children,
-  width,
-  height,
-  xScale,
-  line,
-  lineItem,
-  xTicks,
-  yTicks,
-}) {
-  console.log("ZoomableSVG");
+function ZoomableLineChart({ ymData, width, height, margin }) {
+  console.log("ZoomableLineChart");
   const svgRef = useRef();
-  // const extent = [
-  //   [0, 0],
-  //   [width, height],
-  // ];
-  const [x, setX] = useState(50);
-  const [y, setY] = useState(50);
-  const [k, setK] = useState(1);
-  const [zoomState, setZoomState] = useState();
-
-  if (zoomState) {
-    const newXScale = zoomState.rescaleX(xScale);
-    // console.log(newXScale.domain());
-    // console.log(xScale.domain());
-  }
+  console.log(ymData);
+  const [currentZoom, setCurrentZoom] = useState();
+  const yScale = d3
+    .scaleLinear()
+    .domain(d3.extent(ymData, (d) => d.len))
+    .range([height, 0])
+    .nice();
 
   useEffect(() => {
     const svg = d3.select(svgRef.current);
-    const zoom = d3
+    const svgContent = svg.select(".content");
+
+    const xScale = d3
+      .scaleLinear()
+      .domain([0, ymData.length - 1])
+      .range([0, width])
+      .nice();
+
+    if (currentZoom) {
+      const newXScale = currentZoom.rescaleX(xScale);
+      //   console.log(xScale.domain());
+      //   console.log(newXScale.domain());
+      xScale.domain(newXScale.domain());
+    }
+
+    // console.log(ymData);
+
+    // console.log(lineItem);
+    const line = d3
+      .line()
+      .x((d, i) => xScale(i))
+      .y((d) => yScale(d.len))
+      .curve(d3.curveLinear);
+
+    svgContent
+      .select(".line")
+      .data([ymData])
+      .join("path")
+      // .attr("className", "myline")
+      .attr("stroke", "black")
+      .attr("fill", "none")
+      .attr("transform", `translate(${margin.left},${margin.top})`)
+      .attr("d", line);
+
+    const newline = d3
+      .line()
+      .x((d, i) => xScale(i))
+      .y((d) => yScale(d.newbielen))
+      .curve(d3.curveLinear);
+
+    svgContent
+      .select(".newline")
+      .data([ymData])
+      .join("path")
+      // .attr("className", "myline")
+      .attr("stroke", "black")
+      .attr("fill", "none")
+      .attr("transform", `translate(${margin.left},${margin.top})`)
+      .attr("d", newline);
+
+    const xAxis = d3.axisBottom(xScale);
+    svg
+      .select(".x-axis")
+      .attr("transform", `translate(${margin.left}, ${height + margin.top})`)
+      .call(xAxis);
+
+    const yAxis = d3.axisLeft(yScale);
+    svg
+      .select(".y-axis")
+      .attr("transform", `translate(${margin.left}, ${margin.left})`)
+      .call(yAxis);
+
+    const zoomBehavior = d3
       .zoom()
-      .scaleExtent([1, 3])
+      .scaleExtent([0.5, 5])
       .translateExtent([
-        [0, 0],
-        [width, height],
+        [margin.left, margin.top],
+        [width + margin.left, height + margin.top],
       ])
       .on("zoom", (event) => {
-        // console.log(xScale(12));
-        const { x, y, k } = event.transform;
-        setX(x);
-        setY(y);
-        setK(k);
-        const zoomCurrentState = d3.ZoomTransform(svg.node());
-        console.log(zoomCurrentState);
-        // console.log(event.transform);
-        // setZoomState(event.transform.rescaleX());
-        // xScale.range([0, width].map((d) => event.transform.applyX(d)));
-        // console.log(line);
-        // d3.select(".path-new").attr(`translate(${x}, ${y})`);
+        const zoomState = event.transform;
+        setCurrentZoom(zoomState);
       });
-    d3.select(svgRef.current).call(zoom);
-  }, []);
-  return (
-    <svg ref={svgRef} viewBox={`0 0 ${width + 100} ${height + 100}`}>
-      <g transform={`translate(${x}, ${y}) scale(${k})`}>{children}</g>
-    </svg>
-  );
-}
 
-function TrendChartContent({ line, lineItem, xTicks, yTicks, width, height }) {
-  console.log("ChartContent");
-  const [hovered, setHovered] = useState(-1);
-  return (
-    <g>
-      <Axis {...{ xTicks, yTicks, width, height }} />
-      <g className="paths">
-        <path
-          className="path-new"
-          d={line(lineItem.new)}
-          fill={"none"}
-          stroke={"white"}
-          strokeWidth={"1"}
-          opacity={0.8}
-          clipPath={"url(#clip)"}
-        />
-        <path
-          className="path-all"
-          d={line(lineItem.all)}
-          fill={"none"}
-          stroke={"gray"}
-          strokeWidth={"1"}
-          opacity={0.8}
-          clipPath={"url(#clip)"}
-        />
-      </g>
-      <g className="tooltip-rects">
-        {lineItem.all.map((item, index) => {
-          return (
-            <g key={index} transform={`translate(${item.x}, 0)`}>
-              <title>提出数 : {item.ylabel}</title>
-              <rect
-                x={-2}
-                y={0}
-                width={4}
-                height={height}
-                fill={"red"}
-                opacity={index === hovered ? 0.5 : 0}
-                onMouseOver={() => {
-                  setHovered(index);
-                }}
-                onMouseOut={() => {
-                  setHovered(-1);
-                }}
-              />
-              <g
-                transform={`translate(0, ${item.y})`}
-                opacity={index === hovered ? 1 : 0}
-              >
-                <circle
-                  x={0}
-                  y={0}
-                  r={3}
-                  stroke={"red"}
-                  fill={"red"}
-                  opacity={0.5}
-                />
-              </g>
-            </g>
-          );
-        })}
-      </g>
-    </g>
-  );
-}
-
-function TrendChart({ data, width, height }) {
-  const yearData = data["yearData"];
-
-  const xScale = d3
-    .scaleLinear()
-    .domain([0, yearData.length * 12])
-    .range([0, width])
-    .nice();
-  const lenData = yearData
-    .map((item) => {
-      return item["month"].map((mitem) => {
-        return mitem["len"];
-      });
-    })
-    .flat();
-  const yScale = d3
-    .scaleLinear()
-    .domain(d3.extent(lenData))
-    .range([height, 0])
-    .nice();
-  const lineItem = {
-    all: yearData
-      .map((item, index) => {
-        return item["month"].map((mitem, mindex) => {
-          return {
-            x: xScale(index * 12 + mindex),
-            y: yScale(mitem["len"]),
-            ylabel: mitem["len"],
-          };
-        });
-      })
-      .flat(),
-    new: yearData
-      .map((item, index) => {
-        return item["month"].map((mitem, mindex) => {
-          return {
-            x: xScale(index * 12 + mindex),
-            y: yScale(mitem["newbielen"]),
-            ylabel: mitem["newbielen"],
-          };
-        });
-      })
-      .flat(),
-  };
-  const line = d3
-    .line()
-    .x((d) => d.x)
-    .y((d) => d.y)
-    .curve(d3.curveLinear);
-  const xTicks = yearData.map((item, index) => {
-    return {
-      x: xScale(index * 12),
-      label: item["year"],
-    };
-  });
-  const yTicks = yScale.ticks().map((y) => {
-    return {
-      y: yScale(y),
-      label: y,
-    };
-  });
+    svg.call(zoomBehavior);
+  }, [currentZoom]);
 
   return (
-    <g>
-      <rect
-        className="zoom-panel"
-        x={0}
-        y={0}
-        width={width}
-        height={height}
-        fill={"green"}
-        opacity={0.5}
-      ></rect>
-      <ZoomableSVG
-        {...{ width, height, xScale, line, lineItem, xTicks, yTicks }}
+    <div>
+      <svg
+        ref={svgRef}
+        viewBox={`0 0 ${width + margin.right + margin.left} ${
+          height + margin.bottom + margin.top
+        }`}
+        transform={`translate(${margin.left}, ${margin.top})`}
       >
-        <svg width="0" heght="0">
-          <defs>
-            <clipPath id="clip">
-              <rect x={0} y={0} width={width} height={height}></rect>
-            </clipPath>
-          </defs>
-        </svg>
-        <TrendChartContent
-          {...{ line, lineItem, xTicks, yTicks, width, height }}
-        />
-      </ZoomableSVG>
-    </g>
+        <defs>
+          <clipPath id="clip">
+            <rect
+              x={margin.left}
+              y={margin.top}
+              width={width}
+              height={height}
+            />
+          </clipPath>
+        </defs>
+        <g className="content" clipPath="url(#clip)">
+          <path className="line"></path>
+          <path className="newline"></path>
+        </g>
+        <g className="x-axis"></g>
+        <g className="y-axis"></g>
+      </svg>
+    </div>
   );
 }
 
@@ -261,15 +163,23 @@ function App() {
     return <p>loading</p>;
   }
 
+  const { data: runs, players, yearData, ymData } = data;
+  const margin = {
+    top: 50,
+    bottom: 50,
+    left: 50,
+    right: 50,
+  };
+  // console.log(ymData);
   return (
-    // <Suspense fallback={<p>loading</p>}>
-    <div className="has-background-grey-dark">
+    // <div className="has-background-grey-dark">
+    <div>
       {/* <Header />
       <TrendChart {...{ data, width: 600, height: 300 }} />
       <Footer /> */}
-      <Chart {...{ data, width: 600, height: 300 }} />
+      <ZoomableLineChart {...{ ymData, width: 600, height: 300, margin }} />
+      {/* <Chart {...{ data, width: 600, height: 300 }} /> */}
     </div>
-    // </Suspense>
   );
 }
 
