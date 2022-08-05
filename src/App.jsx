@@ -60,8 +60,48 @@ function ZoomableSVG({ children, width, height, xScale, line, pathRef }) {
 
 function TrendChartContent({ line, lineItem, xTicks, yTicks }) {
   console.log("ChartContent");
+  const [hovered, setHovered] = useState(-1);
   return (
-    <g>
+    <g transform="translate(50, 50)">
+      <g>
+        <path
+          // ref={pathRef}
+          className="path"
+          d={line(lineItem)}
+          fill={"none"}
+          stroke={"black"}
+          strokeWidth={"3"}
+        />
+      </g>
+      <g>
+        {lineItem.map((item, index) => {
+          return (
+            <g key={index} transform={`translate(${item.x}, 0)`}>
+              <title>提出数 : {item.ylabel}</title>
+              <rect
+                x={0}
+                y={0}
+                width={4}
+                height={400}
+                fill={"red"}
+                opacity={index === hovered ? 0.5 : 0}
+                onMouseOver={() => {
+                  setHovered(index);
+                }}
+                onMouseOut={() => {
+                  setHovered(-1);
+                }}
+              />
+              <g
+                transform={`translate(0, ${item.y})`}
+                opacity={index === hovered ? 1 : 0}
+              >
+                <circle x={0} y={0} r={5} stroke={"red"} fill={"red"} />
+              </g>
+            </g>
+          );
+        })}
+      </g>
       <Axis {...{ xTicks, yTicks }} />
     </g>
   );
@@ -128,9 +168,6 @@ function TrendChart(props) {
   });
 
   const pathRef = useRef();
-  console.log(lineItem.map((_) => 0));
-  const [hovered, setHovered] = useState(-1);
-  console.log(hovered);
   // return <svg id="chart" ref={svgRef} viewBox="0 0 500 500"></svg>;
   return (
     <ZoomableSVG
@@ -141,51 +178,6 @@ function TrendChart(props) {
       pathRef={pathRef}
     >
       <TrendChartContent {...{ line, lineItem, xTicks, yTicks }} />
-      <g transform="translate(50, 50)">
-        <g>
-          <path
-            ref={pathRef}
-            className="path"
-            d={line(lineItem)}
-            fill={"none"}
-            stroke={"black"}
-            strokeWidth={"3"}
-          />
-        </g>
-        <g>
-          {lineItem.map((item, index) => {
-            return (
-              <g key={index} transform={`translate(${item.x}, 0)`}>
-                <title>提出数 : {item.ylabel}</title>
-                <rect
-                  x={0}
-                  y={0}
-                  width={4}
-                  height={400}
-                  fill={"red"}
-                  opacity={index === hovered ? 0.5 : 0}
-                  onMouseOver={() => {
-                    setHovered(index);
-                  }}
-                  onMouseOut={() => {
-                    console.log(hovered);
-                    hovered[index] = 1;
-                    console.log(hovered);
-                    setHovered(-1);
-                  }}
-                />
-                <g
-                  transform={`translate(0, ${item.y})`}
-                  opacity={index === hovered ? 1 : 0}
-                >
-                  <circle x={0} y={0} r={5} stroke={"red"} fill={"red"} />
-                </g>
-              </g>
-            );
-          })}
-        </g>
-        <Axis {...{ xTicks, yTicks }} />
-      </g>
     </ZoomableSVG>
   );
 }
