@@ -6,52 +6,24 @@ import api from "./api";
 import Axis from "./Axis";
 
 function ZoomableSVG({ children, width, height, xScale, line, pathRef }) {
-  // console.log("ZoomableSVG");
+  console.log("ZoomableSVG");
   const svgRef = useRef();
-  // const extent = [
-  //   [0, 0],
-  //   [width, height],
-  // ];
-  // useEffect(() => {
-  //   const zoom = d3
-  //     .zoom()
-  //     .scaleExtent([1, 32])
-  //     .extent([
-  //       [0, 0],
-  //       [500, 500],
-  //     ])
-  //     .translateExtent([
-  //       [0, -100],
-  //       [500, -100],
-  //     ])
-  //     // .translateExtent(extent)
-  //     // .extent(extent)
-  //     .on("zoom", (event) => {
-  //       // extent = d3.event.selection;
-  //       // console.log(extent);
-  //       const { x, y, k } = event.transform;
-  //       xScale
-  //         .domain(event.transform.rescaleX(xScale).domain())
-  //         .range([0, 400].map((d) => event.transform.applyX(d)));
-  //       // d3.select(pathRef.current).attr("d", line);
-  //     });
-  //   d3.select(svgRef.current).call(zoom);
-
-  //   // const brush = d3
-  //   //   .brushX()
-  //   //   .extent([
-  //   //     [0, 0],
-  //   //     [400, 400],
-  //   //   ])
-  //   //   .on("end", (event) => {
-  //   //     extent = event.selection;
-  //   //     if (extent) {
-  //   //       xScale.domain([xScale.invert(extent[0]), xinvert(extent[1])]);
-  //   //       d3.select(svgRef.current).call(brush.move, null);
-  //   //     }
-  //   //   });
-  //   // d3.select(svgRef.current).call(brush);
-  // }, []);
+  const extent = [
+    [0, 0],
+    [width, height],
+  ];
+  useEffect(() => {
+    const zoom = d3.zoom().on("zoom", (event) => {
+      // extent = d3.event.selection;
+      // console.log(extent);
+      const { x, y, k } = event.transform;
+      xScale
+        .domain(event.transform.rescaleX(xScale).domain())
+        .range([0, 400].map((d) => event.transform.applyX(d)));
+      // d3.select(pathRef.current).attr("d", line);
+    });
+    d3.select(svgRef.current).call(zoom);
+  }, []);
   return (
     <svg ref={svgRef} viewBox={`0 0 ${width + 100} ${height + 100}`}>
       <g>{children}</g>
@@ -59,12 +31,12 @@ function ZoomableSVG({ children, width, height, xScale, line, pathRef }) {
   );
 }
 
-function TrendChartContent({ line, lineItem, xTicks, yTicks }) {
+function TrendChartContent({ line, lineItem, xTicks, yTicks, width, height }) {
   console.log("ChartContent");
   const [hovered, setHovered] = useState(-1);
   return (
     <g transform="translate(50, 50)">
-      <Axis {...{ xTicks, yTicks }} />
+      <Axis {...{ xTicks, yTicks, width, height }} />
       <g>
         <path
           className="path"
@@ -123,13 +95,13 @@ function TrendChartContent({ line, lineItem, xTicks, yTicks }) {
   );
 }
 
-function TrendChart(props) {
-  const yearData = props["yearData"];
+function TrendChart({ data, width, height }) {
+  const yearData = data["yearData"];
 
   const xScale = d3
     .scaleLinear()
     .domain([0, yearData.length * 12])
-    .range([0, 400])
+    .range([0, width])
     .nice();
   const lenData = yearData
     .map((item) => {
@@ -141,7 +113,7 @@ function TrendChart(props) {
   const yScale = d3
     .scaleLinear()
     .domain(d3.extent(lenData))
-    .range([400, 0])
+    .range([height, 0])
     .nice();
   const lineItem = {
     all: yearData
@@ -188,13 +160,18 @@ function TrendChart(props) {
   const pathRef = useRef();
   return (
     <ZoomableSVG
-      width={400}
-      height={400}
+      width={width}
+      height={height}
       xScale={xScale}
       line={line}
       pathRef={pathRef}
     >
-      <TrendChartContent {...{ line, lineItem, xTicks, yTicks }} />
+      <TrendChartContent
+        {...{ line, lineItem, xTicks, yTicks, width, height }}
+      />
+      <g>
+        <rect x={100} y={100} width={100} height={100}></rect>
+      </g>
     </ZoomableSVG>
   );
 }
@@ -242,7 +219,7 @@ function App() {
     // <Suspense fallback={<p>loading</p>}>
     <div className="has-background-grey-dark">
       <Header />
-      <TrendChart {...data} />
+      <TrendChart {...{ data, width: 600, height: 300 }} />
       <Footer />
     </div>
     // </Suspense>

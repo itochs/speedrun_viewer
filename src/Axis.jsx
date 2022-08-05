@@ -1,9 +1,16 @@
 import { rgb } from "d3";
 
-function XAxis({ xTicks, axisColor }) {
+function XAxis({ xTicks, axisColor, width, height }) {
   return (
-    <g className="x-axis" transform="translate(0, 400)">
-      <line x1={0} y1={0} x2={400} y2={0} stroke={axisColor} strokeWidth={1} />
+    <g className="x-axis" transform={`translate(0, ${height})`}>
+      <line
+        x1={0}
+        y1={0}
+        x2={width}
+        y2={0}
+        stroke={axisColor}
+        strokeWidth={1}
+      />
       <g className="x-axis-label">
         {xTicks.map((tick, index) => {
           return (
@@ -28,10 +35,17 @@ function XAxis({ xTicks, axisColor }) {
   );
 }
 
-function YAxis({ yTicks, axisColor }) {
+function YAxis({ yTicks, axisColor, height }) {
   return (
     <g className="y-axis" transform="translate(0, 0)">
-      <line x1={0} y1={0} x2={0} y2={400} stroke={axisColor} strokeWidth={1} />
+      <line
+        x1={0}
+        y1={0}
+        x2={0}
+        y2={height}
+        stroke={axisColor}
+        strokeWidth={1}
+      />
       {yTicks.map((tick, index) => {
         return (
           <g key={index} transform={`translate(0, ${tick.y})`}>
@@ -54,12 +68,12 @@ function YAxis({ yTicks, axisColor }) {
   );
 }
 
-export default function Axis({ xTicks, yTicks }) {
+export default function Axis({ xTicks, yTicks, width, height }) {
   const axisColor = rgb(59, 246, 130, 0.5);
   return (
     <g>
-      <XAxis {...{ xTicks, axisColor }} />
-      <YAxis {...{ yTicks, axisColor }} />
+      <XAxis {...{ xTicks, axisColor, width, height }} />
+      <YAxis {...{ yTicks, axisColor, height }} />
     </g>
   );
 }
