@@ -64,22 +64,23 @@ function TrendChartContent({ line, lineItem, xTicks, yTicks }) {
   const [hovered, setHovered] = useState(-1);
   return (
     <g transform="translate(50, 50)">
+      <Axis {...{ xTicks, yTicks }} />
       <g>
         <path
           className="path"
           d={line(lineItem.new)}
           fill={"none"}
-          stroke={"blue"}
-          strokeWidth={"2"}
-          opacity={0.5}
+          stroke={"white"}
+          strokeWidth={"1"}
+          opacity={0.8}
         />
         <path
           className="path"
           d={line(lineItem.all)}
           fill={"none"}
-          stroke={"black"}
-          strokeWidth={"3"}
-          opacity={0.5}
+          stroke={"gray"}
+          strokeWidth={"1"}
+          opacity={0.8}
         />
       </g>
       <g>
@@ -105,13 +106,19 @@ function TrendChartContent({ line, lineItem, xTicks, yTicks }) {
                 transform={`translate(0, ${item.y})`}
                 opacity={index === hovered ? 1 : 0}
               >
-                <circle x={0} y={0} r={5} stroke={"red"} fill={"red"} />
+                <circle
+                  x={0}
+                  y={0}
+                  r={3}
+                  stroke={"red"}
+                  fill={"red"}
+                  opacity={0.5}
+                />
               </g>
             </g>
           );
         })}
       </g>
-      <Axis {...{ xTicks, yTicks }} />
     </g>
   );
 }
@@ -195,7 +202,7 @@ function TrendChart(props) {
 function Header() {
   return (
     <>
-      <header className="hero is-dark is-bold">
+      <header className="hero is-success is-bold">
         <div className="hero-body">
           <div className="container">
             <h1 className="title">this is header</h1>
@@ -208,9 +215,9 @@ function Header() {
 function Footer() {
   return (
     <>
-      <footer className="footer">
+      <footer className="footer has-background-dark">
         <div className="content has-text-centered">
-          <p>this is footer</p>
+          <p className="has-text-primary-light">this is footer</p>
         </div>
       </footer>
     </>
@@ -233,7 +240,7 @@ function App() {
 
   return (
     // <Suspense fallback={<p>loading</p>}>
-    <div>
+    <div className="has-background-grey-dark">
       <Header />
       <TrendChart {...data} />
       <Footer />
