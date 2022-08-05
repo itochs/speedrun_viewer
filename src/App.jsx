@@ -72,6 +72,7 @@ function TrendChart(props) {
   // console.log(props["data"]);
   const yearData = props["yearData"];
   const runData = props["data"];
+
   // console.log(yearData);
 
   const xScale = d3
@@ -100,6 +101,7 @@ function TrendChart(props) {
         return {
           x: xScale(index * 12 + mindex),
           y: yScale(mitem["len"]),
+          ylabel: mitem["len"],
         };
       });
     })
@@ -126,6 +128,9 @@ function TrendChart(props) {
   });
 
   const pathRef = useRef();
+  console.log(lineItem.map((_) => 0));
+  const [hovered, setHovered] = useState(-1);
+  console.log(hovered);
   // return <svg id="chart" ref={svgRef} viewBox="0 0 500 500"></svg>;
   return (
     <ZoomableSVG
@@ -137,7 +142,6 @@ function TrendChart(props) {
     >
       <TrendChartContent {...{ line, lineItem, xTicks, yTicks }} />
       <g transform="translate(50, 50)">
-        <circle x={400} y={200} r={20} stroke={"red"} fill={"red"} />
         <g>
           <path
             ref={pathRef}
@@ -150,28 +154,36 @@ function TrendChart(props) {
         </g>
         <g>
           {lineItem.map((item, index) => {
-            let over = false;
             return (
-              <g key={index}>
-                <title>{item.x}</title>
+              <g key={index} transform={`translate(${item.x}, 0)`}>
+                <title>提出数 : {item.ylabel}</title>
                 <rect
-                  key={index}
-                  x={item.x}
+                  x={0}
                   y={0}
                   width={4}
                   height={400}
                   fill={"red"}
-                  opacity={0}
-                  onMouseOver={(event) => {
-                    over = true;
+                  opacity={index === hovered ? 0.5 : 0}
+                  onMouseOver={() => {
+                    setHovered(index);
+                  }}
+                  onMouseOut={() => {
+                    console.log(hovered);
+                    hovered[index] = 1;
+                    console.log(hovered);
+                    setHovered(-1);
                   }}
                 />
-                <circle x={item.x} y={0} r={5} stroke={"red"} fill={"red"} />
+                <g
+                  transform={`translate(0, ${item.y})`}
+                  opacity={index === hovered ? 1 : 0}
+                >
+                  <circle x={0} y={0} r={5} stroke={"red"} fill={"red"} />
+                </g>
               </g>
             );
           })}
         </g>
-        <circle x={100} y={0} r={20} stroke={"red"} fill={"red"} />
         <Axis {...{ xTicks, yTicks }} />
       </g>
     </ZoomableSVG>
