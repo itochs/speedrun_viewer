@@ -37,7 +37,7 @@ function XAxis({ xTicks, axisColor, width, height }) {
 
 function YAxis({ yTicks, axisColor, height }) {
   return (
-    <g className="y-axis" transform="translate(0, 0)">
+    <g className="y-axis">
       <line
         x1={0}
         y1={0}
@@ -71,7 +71,7 @@ function YAxis({ yTicks, axisColor, height }) {
 export default function Axis({ xTicks, yTicks, width, height }) {
   const axisColor = rgb(59, 246, 130, 0.5);
   return (
-    <g>
+    <g className="axis">
       <XAxis {...{ xTicks, axisColor, width, height }} />
       <YAxis {...{ yTicks, axisColor, height }} />
     </g>

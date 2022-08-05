@@ -5,7 +5,7 @@ import * as d3 from "d3";
 import api from "./api";
 import Axis from "./Axis";
 
-function ZoomableSVG({ children, width, height, xScale, line, pathRef }) {
+function ZoomableSVG({ children, width, height, xScale, line, lineItem }) {
   console.log("ZoomableSVG");
   const svgRef = useRef();
   const extent = [
@@ -17,16 +17,47 @@ function ZoomableSVG({ children, width, height, xScale, line, pathRef }) {
       // extent = d3.event.selection;
       // console.log(extent);
       const { x, y, k } = event.transform;
-      xScale
-        .domain(event.transform.rescaleX(xScale).domain())
-        .range([0, 400].map((d) => event.transform.applyX(d)));
+      // console.log(event.transform);
+      // xScale
+      //   .domain(event.transform.rescaleX(xScale).domain())
+      //   .range([0, 400].map((d) => event.transform.applyX(d)));
       // d3.select(pathRef.current).attr("d", line);
     });
-    d3.select(svgRef.current).call(zoom);
+    const defs = d3
+      .select(svgRef.current)
+      .append("defs")
+      .append("clipPath")
+      .attr("id", "clip")
+      .append("rect")
+      .attr("x", 50)
+      .attr("width", width)
+      .attr("height", height);
+    d3.select(svgRef.current).call(zoom.transform, d3.zoomIdentity);
   }, []);
   return (
     <svg ref={svgRef} viewBox={`0 0 ${width + 100} ${height + 100}`}>
-      <g>{children}</g>
+      <g transform="translate(50, 50)">
+        {children}
+        <g className="paths">
+          <path
+            className="path-newn"
+            d={line(lineItem.new)}
+            fill={"none"}
+            stroke={"white"}
+            strokeWidth={"1"}
+            opacity={0.8}
+            clipPath={"url(#clip)"}
+          />
+          <path
+            className="path-all"
+            d={line(lineItem.all)}
+            fill={"none"}
+            stroke={"gray"}
+            strokeWidth={"1"}
+            opacity={0.8}
+          />
+        </g>
+      </g>
     </svg>
   );
 }
@@ -35,35 +66,18 @@ function TrendChartContent({ line, lineItem, xTicks, yTicks, width, height }) {
   console.log("ChartContent");
   const [hovered, setHovered] = useState(-1);
   return (
-    <g transform="translate(50, 50)">
+    <g>
       <Axis {...{ xTicks, yTicks, width, height }} />
-      <g>
-        <path
-          className="path"
-          d={line(lineItem.new)}
-          fill={"none"}
-          stroke={"white"}
-          strokeWidth={"1"}
-          opacity={0.8}
-        />
-        <path
-          className="path"
-          d={line(lineItem.all)}
-          fill={"none"}
-          stroke={"gray"}
-          strokeWidth={"1"}
-          opacity={0.8}
-        />
-      </g>
-      <g>
+
+      <g className="tooltip-rects">
         {lineItem.all.map((item, index) => {
           return (
             <g key={index} transform={`translate(${item.x}, 0)`}>
               <title>提出数 : {item.ylabel}</title>
               <rect
-                x={0}
+                x={-2}
                 y={0}
-                width={2}
+                width={4}
                 height={400}
                 fill={"red"}
                 opacity={index === hovered ? 0.5 : 0}
@@ -159,20 +173,16 @@ function TrendChart({ data, width, height }) {
 
   const pathRef = useRef();
   return (
-    <ZoomableSVG
-      width={width}
-      height={height}
-      xScale={xScale}
-      line={line}
-      pathRef={pathRef}
-    >
-      <TrendChartContent
-        {...{ line, lineItem, xTicks, yTicks, width, height }}
-      />
-      <g>
-        <rect x={100} y={100} width={100} height={100}></rect>
-      </g>
-    </ZoomableSVG>
+    <g>
+      <ZoomableSVG {...{ width, height, xScale, line, lineItem }}>
+        <TrendChartContent
+          {...{ line, lineItem, xTicks, yTicks, width, height }}
+        />
+        <g>
+          <rect x={100} y={100} width={100} height={100}></rect>
+        </g>
+      </ZoomableSVG>
+    </g>
   );
 }
 
