@@ -199,6 +199,15 @@ function Header() {
     </>
   );
 }
+function Footer() {
+  return (
+    <>
+      <footer>
+        <p>this is footer</p>
+      </footer>
+    </>
+  );
+}
 
 function App() {
   const [data, setData] = useState();
@@ -219,6 +228,7 @@ function App() {
     <div>
       <Header />
       <TrendChart {...data} />
+      <Footer />
     </div>
     // </Suspense>
   );
