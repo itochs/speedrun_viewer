@@ -48,7 +48,7 @@ function ZoomableLineChart({ ymData, width, height, margin, color }) {
       const newXScale = currentZoom.rescaleX(xScale);
       xScale.domain([
         Math.max(0, newXScale.domain()[0]),
-        Math.min(ymData.length, newXScale.domain()[1]),
+        Math.min(ymData.length - 1, newXScale.domain()[1]),
       ]);
       xScale.domain(newXScale.domain());
       // console.log(newXScale.ticks());
@@ -77,16 +77,21 @@ function ZoomableLineChart({ ymData, width, height, margin, color }) {
       .attr("transform", `translate(${margin.left},${margin.top})`)
       .attr("d", newline);
 
-    const xAxis = d3.axisBottom(xScale);
-    // .tickFormat((d, i) => {
-    //   console.log("d", d);
-    //   if (!d || d >= ymData.length || d < 0 || Number.isInteger(d)) {
-    //     // console.log(ymData[d].year);
-    //     return;
-    //   }
-    //   console.log(ymData[d]);
-    //   return `${ymData[d].year}年${ymData[d].month}月`;
-    // });
+    console.log("len", ymData.length);
+    const xAxis = d3.axisBottom(xScale).tickFormat((d, i) => {
+      console.log("d", d);
+      if (d >= ymData.length || d < 0 || !Number.isInteger(d)) {
+        // console.log(ymData[d].year);
+        return;
+      }
+      console.log(ymData[d]);
+      if (ymData[d] == undefined) {
+        return;
+      }
+      console.log("pathed d");
+      console.log(ymData[d]);
+      return `${ymData[d].year}年${ymData[d].month}月`;
+    });
     svg
       .select(".x-axis")
       .attr("transform", `translate(${margin.left}, ${height - margin.bottom})`)
