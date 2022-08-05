@@ -213,7 +213,7 @@ function Header() {
       <header className="hero is-success is-bold">
         <div className="hero-body">
           <div className="container">
-            <h1 className="title">this is header</h1>
+            <h1 className="title">speedrun viewer of newbie</h1>
           </div>
         </div>
       </header>
@@ -225,7 +225,21 @@ function Footer() {
     <>
       <footer className="footer has-background-dark">
         <div className="content has-text-centered">
-          <p className="has-text-primary-light">this is footer</p>
+          <div className="columns">
+            <a
+              className="button column is-one-thirds"
+              href="https://www.speedrun.com/"
+            >
+              speedrun
+            </a>
+            <a
+              className="button column is-one-thirds"
+              href="https://github.com/speedruncomorg/api"
+            >
+              speedrun API
+            </a>
+          </div>
+          <p className="has-text-primary-light">2022 ito hal</p>
         </div>
       </footer>
     </>
