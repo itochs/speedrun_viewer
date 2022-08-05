@@ -6,8 +6,10 @@ import api from "./api";
 
 function ZoomableLineChart({ ymData, width, height, margin, color }) {
   console.log("ZoomableLineChart");
+  // console.log(ymData);
   const svgRef = useRef();
   const [currentZoom, setCurrentZoom] = useState();
+  const [xTicksValue, setXTicksValue] = useState();
 
   const xScale = d3
     .scaleLinear()
@@ -48,7 +50,9 @@ function ZoomableLineChart({ ymData, width, height, margin, color }) {
         Math.max(0, newXScale.domain()[0]),
         Math.min(ymData.length, newXScale.domain()[1]),
       ]);
-      // xScale.domain(newXScale.domain());
+      xScale.domain(newXScale.domain());
+      // console.log(newXScale.ticks());
+      setXTicksValue(newXScale.ticks());
     }
 
     svgContent
@@ -73,12 +77,16 @@ function ZoomableLineChart({ ymData, width, height, margin, color }) {
       .attr("transform", `translate(${margin.left},${margin.top})`)
       .attr("d", newline);
 
-    const xAxis = d3.axisBottom(xScale).tickFormat((d, i) => {
-      if (d < ymData.length) {
-        console.log(ymData[d].year);
-        return `${ymData[d].year}年${ymData[d].month}月`;
-      }
-    });
+    const xAxis = d3.axisBottom(xScale);
+    // .tickFormat((d, i) => {
+    //   console.log("d", d);
+    //   if (!d || d >= ymData.length || d < 0 || Number.isInteger(d)) {
+    //     // console.log(ymData[d].year);
+    //     return;
+    //   }
+    //   console.log(ymData[d]);
+    //   return `${ymData[d].year}年${ymData[d].month}月`;
+    // });
     svg
       .select(".x-axis")
       .attr("transform", `translate(${margin.left}, ${height - margin.bottom})`)
@@ -86,10 +94,13 @@ function ZoomableLineChart({ ymData, width, height, margin, color }) {
 
     const zoomBehavior = d3
       .zoom()
-      .scaleExtent([0.5, 5])
+      .scaleExtent([1, 5])
       .translateExtent([
         [margin.left, margin.top],
-        [width - margin.right, height - margin.bottom],
+        [
+          width - margin.right - margin.left,
+          height - margin.bottom - margin.top,
+        ],
       ])
       .on("zoom", (event) => {
         const zoomState = event.transform;
@@ -99,17 +110,9 @@ function ZoomableLineChart({ ymData, width, height, margin, color }) {
     svg.call(zoomBehavior);
   }, [currentZoom]);
 
-  // if (xTicksState == null) {
-  //   return <p>loading</p>;
-  // }
-
   return (
     <div className="has-background-success-ligh">
-      <svg
-        ref={svgRef}
-        viewBox={`0 0 ${width} ${height}`}
-        // transform={`translate(${margin.left}, ${margin.top})`}
-      >
+      <svg ref={svgRef} viewBox={`0 0 ${width} ${height}`}>
         <defs>
           <clipPath id="clip">
             <rect
@@ -124,10 +127,7 @@ function ZoomableLineChart({ ymData, width, height, margin, color }) {
           <path className="line"></path>
           <path className="newline"></path>
         </g>
-        <g
-          className="x-axis"
-          // transform={`translate(${margin.left}, ${height - margin.top})`}
-        ></g>
+        <g className="x-axis"></g>
         <g
           className="y-axis"
           transform={`translate(${margin.left}, ${margin.top})`}
@@ -140,9 +140,9 @@ function ZoomableLineChart({ ymData, width, height, margin, color }) {
             stroke={"black"}
             strokeWidth={1}
           />
-          {yTicks.map((item) => {
+          {yTicks.map((item, i) => {
             return (
-              <g transform={`translate(0, ${item.y})`}>
+              <g key={i} transform={`translate(0, ${item.y})`}>
                 <line x1={0} y1={0} x2={-5} y2={0} stroke={"black"}></line>
                 <text
                   x={-10}
@@ -161,6 +161,51 @@ function ZoomableLineChart({ ymData, width, height, margin, color }) {
     </div>
   );
 }
+
+function Selector({ setGameName, games }) {
+  const inputRef = useRef();
+  return (
+    <div>
+      <div>
+        <input
+          className="input is-primary"
+          ref={inputRef}
+          type={"text"}
+          defaultValue={"super mario 64"}
+        />
+        <button
+          className="button is-dark"
+          onClick={() => {
+            console.log(inputRef.current.value);
+            setGameName(inputRef.current.value);
+          }}
+        >
+          search
+        </button>
+      </div>
+
+      <div className="select">
+        <select
+          onChange={(event) => {
+            event.preventDefault();
+            setGameName(event.target.value);
+          }}
+        >
+          {games["data"].map(({ names }, i) => {
+            return (
+              <option key={i} value={names["international"]}>
+                {names["international"]}
+              </option>
+            );
+          })}
+        </select>
+      </div>
+    </div>
+  );
+}
+// function DropDownItem(value){
+//   return
+// }
 
 function Header() {
   return (
@@ -188,36 +233,64 @@ function Footer() {
 }
 
 function App() {
-  const [data, setData] = useState();
+  const [data, setData] = useState({
+    ymData: null,
+    games: null,
+    loading: true,
+  });
+  // const [ymData, setYmData] = useState({ data: null, loading: true });
+  // const [games, setGames] = useState({ data: null, loading: true });
+  const [gameName, setGameName] = useState("super mario 64");
 
   useEffect(() => {
     (async () => {
-      const result = await api();
-      setData(result);
+      setData({ loading: true });
+      const result = await api(gameName);
+      // console.log(gameName);
+      const { ymData, games } = result;
+      console.log("app");
+      console.log(result);
+      console.log(games);
+      console.log(ymData);
+      setData({ ymData, games, loading: false });
+      // setData({ ymData, games, loading: false });
+      // setGames({ data: games, loading: false });
+      // setYmData({ data: ymData, loading: false });
+      // console.log("effect");
+      // onTextChange(gameName);
     })();
-  }, []);
+  }, [gameName]);
 
-  if (data == null) {
+  if (data.loading) {
     return <p>loading</p>;
   }
 
-  const { ymData } = data;
+  // console.log(data);
   const margin = {
-    top: 25,
-    bottom: 25,
-    left: 25,
-    right: 25,
+    top: 50,
+    bottom: 50,
+    left: 50,
+    right: 50,
   };
   const color = {
     axis: "#022D39",
   };
+  console.log("app");
+  console.log(data);
   // console.log(ymData);
   return (
     // <div className="has-background-grey-dark">
     <div>
       <Header />
+      <Selector {...{ setGameName, games: data["games"] }} />
       <ZoomableLineChart
-        {...{ ymData, width: 600, height: 300, margin, color }}
+        {...{
+          ymData: data["ymData"],
+          width: 600,
+          height: 400,
+          margin,
+          color,
+        }}
       />
       <Footer />
     </div>

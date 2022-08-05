@@ -5,20 +5,17 @@ function parseData(data) {
   });
 }
 
-// async function getRunData() {
-//   const rundata = [];
-//   const max = 200;
-//   let offset = 0;
-//   while (rundata.length % max == 0 && rundata.length <= offset) {
-//     const runRes = await fetch(
-//       `https://www.speedrun.com/api/v1/runs?game=m1z3w2d0&orderby=verify-date&max=${max}&offset=${offset}`
-//     );
-//     const runResJson = await runRes.json();
-//     rundata.push(...runResJson["data"]);
-//     offset += max;
-//   }
-//   return rundata;
-// }
+async function getGameName(gamename, max = 10) {
+  const runRes = await fetch(
+    `https://www.speedrun.com/api/v1/games?_bulk=yes&name=${gamename}&orderby=similarity&max=${max}`
+  );
+  const runResJson = await runRes.json();
+  // offset += max;
+  // console.log(gamename);
+  // console.log(runResJson);
+
+  return runResJson;
+}
 
 function getPlayers(data) {
   const players = data
@@ -96,13 +93,15 @@ function getYearData(data, players) {
   return { runData, ymData };
 }
 
-export default async function api() {
+export default async function api(gamename) {
+  const games = await getGameName(gamename);
+  const gameId = games["data"][0]["id"];
   const rundata = [];
   const max = 200;
   let offset = 0;
   while (rundata.length % max == 0 && rundata.length <= offset) {
     const runRes = await fetch(
-      `https://www.speedrun.com/api/v1/runs?game=m1z3w2d0&orderby=verify-date&max=${max}&offset=${offset}`
+      `https://www.speedrun.com/api/v1/runs?game=${gameId}&orderby=verify-date&max=${max}&offset=${offset}`
     );
     const runResJson = await runRes.json();
     rundata.push(
@@ -110,10 +109,13 @@ export default async function api() {
     );
     offset += max;
   }
+  console.log("api");
   const data = parseData(rundata);
+  console.log(data);
   const players = getPlayers(data);
   const { runData: yearData, ymData } = getYearData(data, players);
-  // console.log(ymData);
 
-  return { data, players, yearData, ymData };
+  console.log(ymData);
+
+  return { ymData, games };
 }
