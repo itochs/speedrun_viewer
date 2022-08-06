@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import * as d3 from "d3";
 import api from "./api";
 
-function ZoomableLineChart({ ymData, width, height, margin, color }) {
+function ZoomableLineChart({ ymData, width, height, margin, color, children }) {
   const svgRef = useRef();
   const [currentZoom, setCurrentZoom] = useState();
   const [xTicksValue, setXTicksValue] = useState();
@@ -56,10 +56,10 @@ function ZoomableLineChart({ ymData, width, height, margin, color }) {
       .select(".line")
       .data([ymData])
       .join("path")
-      .attr("stroke", "#022D39")
+      .attr("stroke", color.all.fill)
       .attr("stroke-width", "3")
       .attr("fill", "none")
-      .attr("opacity", "0.5")
+      .attr("opacity", color.all.opacity)
       .attr("transform", `translate(${margin.left},${margin.top})`)
       .attr("d", line);
 
@@ -67,9 +67,9 @@ function ZoomableLineChart({ ymData, width, height, margin, color }) {
       .select(".newline")
       .data([ymData])
       .join("path")
-      .attr("stroke", "#0794BD")
+      .attr("stroke", color.new.fill)
       .attr("stroke-width", "3")
-      .attr("opacity", "0.5")
+      .attr("opacity", color.new.opacity)
       .attr("fill", "none")
       .attr("transform", `translate(${margin.left},${margin.top})`)
       .attr("d", newline);
@@ -108,7 +108,7 @@ function ZoomableLineChart({ ymData, width, height, margin, color }) {
   }, [currentZoom]);
 
   return (
-    <div className="has-background-success-ligh">
+    <div className="has-background-success-ligh" style={{ width: "90%" }}>
       <svg ref={svgRef} viewBox={`0 0 ${width} ${height}`}>
         <defs>
           <clipPath id="clip">
@@ -154,8 +154,57 @@ function ZoomableLineChart({ ymData, width, height, margin, color }) {
             );
           })}
         </g>
+        <g>{children}</g>
       </svg>
     </div>
+  );
+}
+
+function Legend({ ymData, width, height, margin, color }) {
+  const lwidth = 15;
+  const lheight = 15;
+  const padding = 10;
+  return (
+    <g
+      transform={`translate(${width - margin.right + padding}, ${
+        margin.top + padding
+      })`}
+    >
+      <g>
+        <rect
+          x={0}
+          y={0}
+          width={lwidth}
+          height={lheight}
+          fill={color.all.fill}
+          opacity={color.all.opacity}
+        ></rect>
+        <text
+          x={lwidth + padding}
+          textAnchor="start"
+          dominantBaseline={"hanging"}
+        >
+          All player
+        </text>
+      </g>
+      <g transform={`translate(0, ${lheight + padding})`}>
+        <rect
+          x={0}
+          y={0}
+          width={lwidth}
+          height={lheight}
+          fill={color.new.fill}
+          opacity={color.all.opacity}
+        ></rect>
+        <text
+          x={lwidth + padding}
+          textAnchor="start"
+          dominantBaseline={"hanging"}
+        >
+          New player
+        </text>
+      </g>
+    </g>
   );
 }
 
@@ -264,11 +313,15 @@ function App() {
     top: 50,
     bottom: 50,
     left: 50,
-    right: 50,
+    right: 125,
   };
   const color = {
     axis: "#022D39",
+    all: { fill: "#022D39", opacity: 0.5 },
+    new: { fill: "#0794BD", opacity: 0.5 },
   };
+  const width = 600;
+  const height = 300;
 
   return (
     <div>
@@ -277,12 +330,14 @@ function App() {
       <ZoomableLineChart
         {...{
           ymData: data["ymData"],
-          width: 600,
-          height: 400,
+          width,
+          height,
           margin,
           color,
         }}
-      />
+      >
+        <Legend {...{ ymData: data["ymData"], width, height, margin, color }} />
+      </ZoomableLineChart>
       <Footer />
     </div>
   );
