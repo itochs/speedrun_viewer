@@ -108,7 +108,7 @@ function ZoomableLineChart({ ymData, width, height, margin, color, children }) {
   }, [currentZoom]);
 
   return (
-    <div className="has-background-success-ligh" style={{ width: "90%" }}>
+    <div className="has-background-success-ligh" style={{ width: "80%" }}>
       <svg ref={svgRef} viewBox={`0 0 ${width} ${height}`}>
         <defs>
           <clipPath id="clip">
