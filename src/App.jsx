@@ -212,16 +212,18 @@ function Selector({ setGameName, games }) {
   const inputRef = useRef();
   return (
     <div className=" p-5">
-      <div>
+      <div className="block">
         <label className="is-primary"> search game</label>
+      </div>
+      <div className="columns pl-2">
         <input
-          className="input is-primary"
+          className="input is-primary column  is-half"
           ref={inputRef}
           type={"text"}
           defaultValue={"super mario 64"}
         />
         <button
-          className="button is-dark"
+          className="button is-dark column is-one-fifth"
           onClick={() => {
             setGameName(inputRef.current.value);
           }}
@@ -230,21 +232,23 @@ function Selector({ setGameName, games }) {
         </button>
       </div>
 
-      <div className="select">
-        <select
-          onChange={(event) => {
-            event.preventDefault();
-            setGameName(event.target.value);
-          }}
-        >
-          {games["data"].map(({ names }, i) => {
-            return (
-              <option key={i} value={names["international"]}>
-                {names["international"]}
-              </option>
-            );
-          })}
-        </select>
+      <div>
+        <div className="select">
+          <select
+            onChange={(event) => {
+              event.preventDefault();
+              setGameName(event.target.value);
+            }}
+          >
+            {games["data"].map(({ names }, i) => {
+              return (
+                <option key={i} value={names["international"]}>
+                  {names["international"]}
+                </option>
+              );
+            })}
+          </select>
+        </div>
       </div>
     </div>
   );
