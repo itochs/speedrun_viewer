@@ -211,8 +211,9 @@ function Legend({ ymData, width, height, margin, color }) {
 function Selector({ setGameName, games }) {
   const inputRef = useRef();
   return (
-    <div>
+    <div className=" p-5">
       <div>
+        <label className="is-primary"> search game</label>
         <input
           className="input is-primary"
           ref={inputRef}
