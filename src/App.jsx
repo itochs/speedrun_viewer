@@ -236,26 +236,26 @@ function Selector({ setGameName, games }) {
       </div>
 
       <div>
-        <div className="select">
-          <select
-            onChange={(event) => {
-              event.preventDefault();
-              setGameName(event.target.value);
-            }}
-          >
-            {games == null ? (
-              <option value={null}> none game </option>
-            ) : (
-              games["data"].map(({ names }, i) => {
+        {games == null ? (
+          <div></div>
+        ) : (
+          <div className="select">
+            <select
+              onChange={(event) => {
+                event.preventDefault();
+                setGameName(event.target.value);
+              }}
+            >
+              {games["data"].map(({ names }, i) => {
                 return (
                   <option key={i} value={names["international"]}>
                     {names["international"]}
                   </option>
                 );
-              })
-            )}
-          </select>
-        </div>
+              })}
+            </select>
+          </div>
+        )}
       </div>
     </div>
   );
