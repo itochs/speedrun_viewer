@@ -5,6 +5,9 @@ import * as d3 from "d3";
 import api from "./api";
 
 function ZoomableLineChart({ ymData, width, height, margin, color, children }) {
+  if (ymData == null) {
+    return <p>loading</p>;
+  }
   const svgRef = useRef();
   const [currentZoom, setCurrentZoom] = useState();
   const [xTicksValue, setXTicksValue] = useState();
@@ -240,13 +243,17 @@ function Selector({ setGameName, games }) {
               setGameName(event.target.value);
             }}
           >
-            {games["data"].map(({ names }, i) => {
-              return (
-                <option key={i} value={names["international"]}>
-                  {names["international"]}
-                </option>
-              );
-            })}
+            {games == null ? (
+              <option value={null}> none game </option>
+            ) : (
+              games["data"].map(({ names }, i) => {
+                return (
+                  <option key={i} value={names["international"]}>
+                    {names["international"]}
+                  </option>
+                );
+              })
+            )}
           </select>
         </div>
       </div>
@@ -310,9 +317,9 @@ function App() {
     })();
   }, [gameName]);
 
-  if (data.loading) {
-    return <p>loading</p>;
-  }
+  // if (data.loading) {
+  //   return <p>loading</p>;
+  // }
 
   const margin = {
     top: 50,
