@@ -41,6 +41,8 @@ function ZoomableLineChart({ ymData, width, height, margin, color, children }) {
     };
   });
 
+  const lineWidth = 1;
+
   useEffect(() => {
     const svg = d3.select(svgRef.current);
     const svgContent = svg.select(".content");
@@ -60,7 +62,7 @@ function ZoomableLineChart({ ymData, width, height, margin, color, children }) {
       .data([ymData])
       .join("path")
       .attr("stroke", color.all.fill)
-      .attr("stroke-width", "3")
+      .attr("stroke-width", lineWidth)
       .attr("fill", "none")
       .attr("opacity", color.all.opacity)
       .attr("transform", `translate(${margin.left},${margin.top})`)
@@ -71,7 +73,7 @@ function ZoomableLineChart({ ymData, width, height, margin, color, children }) {
       .data([ymData])
       .join("path")
       .attr("stroke", color.new.fill)
-      .attr("stroke-width", "3")
+      .attr("stroke-width", lineWidth)
       .attr("opacity", color.new.opacity)
       .attr("fill", "none")
       .attr("transform", `translate(${margin.left},${margin.top})`)
@@ -94,7 +96,7 @@ function ZoomableLineChart({ ymData, width, height, margin, color, children }) {
 
     const zoomBehavior = d3
       .zoom()
-      .scaleExtent([1, 5])
+      .scaleExtent([1, 8])
       .translateExtent([
         [margin.left, margin.top],
         [
@@ -111,54 +113,59 @@ function ZoomableLineChart({ ymData, width, height, margin, color, children }) {
   }, [currentZoom]);
 
   return (
-    <div className="has-background-success-ligh" style={{ width: "80%" }}>
-      <svg ref={svgRef} viewBox={`0 0 ${width} ${height}`}>
-        <defs>
-          <clipPath id="clip">
-            <rect
-              x={margin.left}
-              y={margin.top}
-              width={width - margin.left - margin.right}
-              height={height - margin.top - margin.bottom}
+    <div
+      className="has-background-success-ligh columns is-centered"
+      style={{ userSelect: "none" }}
+    >
+      <div className="column is-four-fifths">
+        <svg ref={svgRef} viewBox={`0 0 ${width} ${height}`}>
+          <defs>
+            <clipPath id="clip">
+              <rect
+                x={margin.left}
+                y={margin.top}
+                width={width - margin.left - margin.right}
+                height={height - margin.top - margin.bottom}
+              />
+            </clipPath>
+          </defs>
+          <g className="content" clipPath="url(#clip)">
+            <path className="line"></path>
+            <path className="newline"></path>
+          </g>
+          <g className="x-axis"></g>
+          <g
+            className="y-axis"
+            transform={`translate(${margin.left}, ${margin.top})`}
+          >
+            <line
+              x1={0}
+              y1={0}
+              x2={0}
+              y2={height - margin.bottom - margin.top}
+              stroke={"black"}
+              strokeWidth={1}
             />
-          </clipPath>
-        </defs>
-        <g className="content" clipPath="url(#clip)">
-          <path className="line"></path>
-          <path className="newline"></path>
-        </g>
-        <g className="x-axis"></g>
-        <g
-          className="y-axis"
-          transform={`translate(${margin.left}, ${margin.top})`}
-        >
-          <line
-            x1={0}
-            y1={0}
-            x2={0}
-            y2={height - margin.bottom - margin.top}
-            stroke={"black"}
-            strokeWidth={1}
-          />
-          {yTicks.map((item, i) => {
-            return (
-              <g key={i} transform={`translate(0, ${item.y})`}>
-                <line x1={0} y1={0} x2={-5} y2={0} stroke={"black"}></line>
-                <text
-                  x={-10}
-                  fontSize={12}
-                  textAnchor="end"
-                  dominantBaseline="middle"
-                >
-                  {item.label}
-                </text>
-                <rect x={0} y={0} r={5} fill={"red"}></rect>
-              </g>
-            );
-          })}
-        </g>
-        <g>{children}</g>
-      </svg>
+            {yTicks.map((item, i) => {
+              return (
+                <g key={i} transform={`translate(0, ${item.y})`}>
+                  <line x1={0} y1={0} x2={-5} y2={0} stroke={"black"}></line>
+                  <text
+                    x={-10}
+                    fontSize={12}
+                    textAnchor="end"
+                    dominantBaseline="middle"
+                  >
+                    {item.label}
+                  </text>
+                  <rect x={0} y={0} r={5} fill={"red"}></rect>
+                </g>
+              );
+            })}
+          </g>
+          <g>{children}</g>
+        </svg>
+      </div>
     </div>
   );
 }
@@ -211,49 +218,80 @@ function Legend({ ymData, width, height, margin, color }) {
   );
 }
 
-function Selector({ setGameName, games }) {
+function Selector({ gameNameStatus, games }) {
+  const [gameName, setGameName] = gameNameStatus;
+  const [value, setValue] = useState(gameName);
   const inputRef = useRef();
   return (
-    <div className=" p-5">
+    <div className="p-5" style={{ userSelect: "none" }}>
       <div className="block">
         <label className="is-primary"> search game</label>
       </div>
-      <div className="columns pl-2">
-        <input
-          className="input is-primary column  is-half"
-          ref={inputRef}
-          type={"text"}
-          defaultValue={"super mario 64"}
-        />
-        <button
-          className="button is-dark column is-one-fifth"
-          onClick={() => {
+      <div>
+        <form
+          className="columns"
+          onSubmit={(event) => {
+            event.preventDefault();
             setGameName(inputRef.current.value);
           }}
         >
-          search
-        </button>
-      </div>
-
-      <div>
-        {games == null ? (
-          <div></div>
-        ) : (
-          <div className="select">
-            <select
+          <div className="column is-half">
+            <input
+              className="input is-primary"
+              ref={inputRef}
+              type={"search"}
+              placeholder={"input game name"}
+              // defaultValue={gameName}
+              defaultValue={value}
               onChange={(event) => {
-                event.preventDefault();
-                setGameName(event.target.value);
+                setValue(event.target.value);
+              }}
+            />
+          </div>
+
+          <div className="column is-one-fifth">
+            <button
+              type={"submit"}
+              className="button is-dark"
+              style={{ "text-align": "center" }}
+              onClick={() => {
+                setGameName(inputRef.current.value);
+                setValue(inputRef.current.value);
               }}
             >
-              {games["data"].map(({ names }, i) => {
-                return (
-                  <option key={i} value={names["international"]}>
-                    {names["international"]}
-                  </option>
-                );
-              })}
-            </select>
+              search
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <div className="columns">
+        {games == null ? (
+          <div className="column">
+            <div className="select is-primary">
+              <select>
+                <option>none</option>
+              </select>
+            </div>
+          </div>
+        ) : (
+          <div className="column">
+            <div className="select is-primary">
+              <select
+                onChange={(event) => {
+                  event.preventDefault();
+                  setGameName(event.target.value);
+                }}
+              >
+                {games["data"].map(({ names }, i) => {
+                  return (
+                    <option key={i} value={names["international"]}>
+                      {names["international"]}
+                    </option>
+                  );
+                })}
+              </select>
+            </div>
           </div>
         )}
       </div>
@@ -264,7 +302,10 @@ function Selector({ setGameName, games }) {
 function Header() {
   return (
     <>
-      <header className="hero is-success is-bold">
+      <header
+        className="hero is-success is-bold"
+        style={{ userSelect: "none" }}
+      >
         <div className="hero-body">
           <div className="container">
             <h1 className="title">speedrun viewer of newbie</h1>
@@ -277,7 +318,10 @@ function Header() {
 function Footer() {
   return (
     <>
-      <footer className="footer has-background-dark">
+      <footer
+        className="footer has-background-dark"
+        style={{ userSelect: "none" }}
+      >
         <div className="content has-text-centered">
           <div className="columns">
             <a
@@ -338,7 +382,9 @@ function App() {
   return (
     <div>
       <Header />
-      <Selector {...{ setGameName, games: data["games"] }} />
+      <Selector
+        {...{ gameNameStatus: [gameName, setGameName], games: data["games"] }}
+      />
       <ZoomableLineChart
         {...{
           ymData: data["ymData"],
