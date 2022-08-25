@@ -308,7 +308,7 @@ function Header() {
       >
         <div className="hero-body">
           <div className="container">
-            <h1 className="title">speedrun viewer of newbie</h1>
+            <h1 className="title">speedrun viewer of new player</h1>
           </div>
         </div>
       </header>
