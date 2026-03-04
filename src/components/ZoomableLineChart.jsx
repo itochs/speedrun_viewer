@@ -109,15 +109,12 @@ function ZoomableLineChart({ ymData, width, height, margin, color, children }) {
   }, [currentZoom, ymData, xScale, yScale, color, margin, width, height]);
 
   if (ymData == null) {
-    return <p>loading</p>;
+    return <p className="py-6 text-center text-slate-600">loading</p>;
   }
 
   return (
-    <div
-      className="has-background-success-ligh columns is-centered"
-      style={{ userSelect: "none" }}
-    >
-      <div className="column is-four-fifths">
+    <div className="mt-4 select-none rounded-xl bg-cyan-50 p-3 ring-1 ring-cyan-200 sm:p-4">
+      <div className="mx-auto w-full max-w-4xl">
         <svg ref={svgRef} viewBox={`0 0 ${width} ${height}`}>
           <defs>
             <clipPath id="clip">

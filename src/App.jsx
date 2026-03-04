@@ -1,4 +1,3 @@
-import "bulma/css/bulma.css";
 import { useEffect, useState } from "react";
 import api from "./api";
 import Footer from "./components/Footer";
@@ -39,22 +38,24 @@ function App() {
   const height = 300;
 
   return (
-    <div>
+    <div className="min-h-screen bg-slate-50 text-slate-900">
       <Header />
-      <Selector
-        {...{ gameNameStatus: [gameName, setGameName], games: data.games }}
-      />
-      <ZoomableLineChart
-        {...{
-          ymData: data.ymData,
-          width,
-          height,
-          margin,
-          color,
-        }}
-      >
-        <Legend {...{ width, margin, color }} />
-      </ZoomableLineChart>
+      <main className="mx-auto max-w-5xl px-4 py-6 sm:px-6">
+        <Selector
+          {...{ gameNameStatus: [gameName, setGameName], games: data.games }}
+        />
+        <ZoomableLineChart
+          {...{
+            ymData: data.ymData,
+            width,
+            height,
+            margin,
+            color,
+          }}
+        >
+          <Legend {...{ width, margin, color }} />
+        </ZoomableLineChart>
+      </main>
       <Footer />
     </div>
   );
