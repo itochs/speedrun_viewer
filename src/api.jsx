@@ -94,10 +94,17 @@ export default async function api(gamename) {
   const rundata = [];
   const max = 200;
   let offset = 0;
+
+  const serachParam = new URLSearchParams({
+    game: gameId,
+    orderby: "verify-date",
+    max,
+    offset,
+  });
+  const url = new URL("https://www.speedrun.com/api/v1/runs");
+  url.search = serachParam.toString();
   while (rundata.length % max == 0 && rundata.length <= offset) {
-    const runRes = await fetch(
-      `https://www.speedrun.com/api/v1/runs?game=${gameId}&orderby=verify-date&max=${max}&offset=${offset}`,
-    );
+    const runRes = await fetch(url);
     const runResJson = await runRes.json();
     rundata.push(
       ...runResJson["data"].filter((item) => item["submitted"] != null),
