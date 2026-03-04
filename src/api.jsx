@@ -7,7 +7,7 @@ function parseData(data) {
 
 async function getGameName(gamename, max = 10) {
   const runRes = await fetch(
-    `https://www.speedrun.com/api/v1/games?_bulk=yes&name=${gamename}&orderby=similarity&max=${max}`
+    `https://www.speedrun.com/api/v1/games?_bulk=yes&name=${gamename}&orderby=similarity&max=${max}`,
   );
   const runResJson = await runRes.json();
 
@@ -26,7 +26,7 @@ function getYearData(data, players) {
     ...new Set(
       data.map((item) => {
         return item["submitted"].getFullYear();
-      })
+      }),
     ),
   ];
   const oldPlayers = getPlayers(
@@ -35,7 +35,7 @@ function getYearData(data, players) {
         item["submitted"].getFullYear() === years[0] &&
         item["submitted"].getMonth() < 3
       );
-    })
+    }),
   );
   const month = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
   const runData = years.map((year) => {
@@ -96,11 +96,11 @@ export default async function api(gamename) {
   let offset = 0;
   while (rundata.length % max == 0 && rundata.length <= offset) {
     const runRes = await fetch(
-      `https://www.speedrun.com/api/v1/runs?game=${gameId}&orderby=verify-date&max=${max}&offset=${offset}`
+      `https://www.speedrun.com/api/v1/runs?game=${gameId}&orderby=verify-date&max=${max}&offset=${offset}`,
     );
     const runResJson = await runRes.json();
     rundata.push(
-      ...runResJson["data"].filter((item) => item["submitted"] != null)
+      ...runResJson["data"].filter((item) => item["submitted"] != null),
     );
     offset += max;
   }

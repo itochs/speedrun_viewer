@@ -1,7 +1,6 @@
 import "bulma/css/bulma.css";
-
-import { useEffect, useRef, useState } from "react";
 import * as d3 from "d3";
+import { useEffect, useRef, useState } from "react";
 import api from "./api";
 
 function ZoomableLineChart({ ymData, width, height, margin, color, children }) {
