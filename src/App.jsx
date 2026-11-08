@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import api from "./api.mjs";
+import { loadGameStatistics } from "./application/loadGameStatistics.mjs";
 import Footer from "./components/Footer";
 import Header from "./components/Header";
 import Legend from "./components/Legend";
@@ -26,9 +26,12 @@ function App() {
         error: null,
       });
       try {
-        const { monthlyStatistics, games } = await api(gameName, {
-          signal: controller.signal,
-        });
+        const { monthlyStatistics, games } = await loadGameStatistics(
+          gameName,
+          {
+            signal: controller.signal,
+          },
+        );
         if (active) {
           setData({ monthlyStatistics, games, loading: false, error: null });
         }

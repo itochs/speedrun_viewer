@@ -27,10 +27,22 @@ pnpm dev
 ## 主な構成
 
 - `src/App.jsx`: 画面全体の構成、検索対象ゲーム名の状態管理
-- `src/api.mjs`: speedrun.com API の取得・整形ロジック
+- `src/application/loadGameStatistics.mjs`: ゲーム検索から集計までのユースケース
+- `src/domain/monthlyRunStatistics.mjs`: 月別の記録数と新規プレイヤー数の計算
+- `src/infrastructure/speedrunClient.mjs`: speedrun.com API との通信とデータ変換
 - `src/components/Selector.jsx`: ゲーム検索フォーム、候補選択 UI
 - `src/components/ZoomableLineChart.jsx`: D3 によるズーム可能な折れ線グラフ
 - `src/style.css`: Tailwind CSS のエントリ（`@import "tailwindcss";`）
+
+## 設計の考え方
+
+画面は `loadGameStatistics` にゲーム名を渡します。ユースケースは API クライアントからゲームと記録を取得し、月別集計を呼び出します。
+
+- **ドメイン**: 「新規プレイヤーは、そのゲームで以前の月に登場していない登録済みプレイヤー」という集計ルールを持ちます。通信や React には依存しません。
+- **アプリケーション**: 検索、記録取得、集計の順序を決めます。外部 API の URL やレスポンス形式は扱いません。
+- **インフラストラクチャ**: speedrun.com の URL、ページ送り、レスポンスからアプリ内のデータへの変換を担当します。
+
+この分け方は DDD の関心の分離をこの小さなアプリに適用したものです。集約やリポジトリなどの仕組みは、必要になるまで追加していません。
 
 ## メモ
 
