@@ -1,4 +1,4 @@
-// A new player is a registered player who has not appeared in an earlier month.
+// First seen means no earlier month among the runs supplied to this calculation.
 export function calculateMonthlyRunStatistics(runs) {
   const months = new Map();
 

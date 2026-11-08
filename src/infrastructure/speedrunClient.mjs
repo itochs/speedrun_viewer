@@ -24,7 +24,8 @@ export const speedrunClient = {
     if (cursor == null) {
       pageUrl.search = new URLSearchParams({
         game: gameId,
-        orderby: "verify-date",
+        orderby: "submitted",
+        direction: "desc",
         max: 200,
         offset: 0,
       });

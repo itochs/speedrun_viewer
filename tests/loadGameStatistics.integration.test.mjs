@@ -18,7 +18,7 @@ const runPagination = (offset, nextOffset) => ({
       : [
           {
             rel: "next",
-            uri: `https://www.speedrun.com/api/v1/runs?game=game-1&orderby=verify-date&max=200&offset=${nextOffset}`,
+            uri: `https://www.speedrun.com/api/v1/runs?game=game-1&orderby=submitted&direction=desc&max=200&offset=${nextOffset}`,
           },
         ],
 });

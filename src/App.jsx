@@ -63,6 +63,11 @@ function App() {
               集計済み {loadedCount} 件
               {(hasNextPage || truncated) && "（読み込み済みの範囲）"}
             </p>
+            {(hasNextPage || truncated) && (
+              <p className="text-sm text-slate-600">
+                初登場は読み込み済みの記録内で判定します。古いページを追加すると値が変わる場合があります。
+              </p>
+            )}
             {hasNextPage && (
               <button
                 type="button"

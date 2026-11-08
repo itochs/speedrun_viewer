@@ -4,7 +4,7 @@ import { speedrunClient } from "../src/infrastructure/speedrunClient.mjs";
 
 const nextLink = (offset) => ({
   rel: "next",
-  uri: `https://www.speedrun.com/api/v1/runs?game=game-1&orderby=verify-date&max=200&offset=${offset}`,
+  uri: `https://www.speedrun.com/api/v1/runs?game=game-1&orderby=submitted&direction=desc&max=200&offset=${offset}`,
 });
 
 const runPage = (offset, nextOffset) => ({
@@ -29,6 +29,8 @@ test("fetches only one page even when it contains 200 runs", async (t) => {
   const offsets = [];
   globalThis.fetch = async (url) => {
     offsets.push(Number(url.searchParams.get("offset")));
+    assert.equal(url.searchParams.get("orderby"), "submitted");
+    assert.equal(url.searchParams.get("direction"), "desc");
     return { ok: true, json: async () => runPage(0, 200) };
   };
 

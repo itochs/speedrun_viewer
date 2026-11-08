@@ -40,7 +40,7 @@ function Legend({ width, margin, color }) {
           textAnchor="start"
           dominantBaseline="hanging"
         >
-          New player
+          First seen
         </text>
       </g>
     </g>
