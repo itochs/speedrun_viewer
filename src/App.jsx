@@ -1,59 +1,13 @@
-import { useEffect, useState } from "react";
-import { loadGameStatistics } from "./application/loadGameStatistics.mjs";
 import Footer from "./components/Footer";
 import Header from "./components/Header";
 import Legend from "./components/Legend";
 import Selector from "./components/Selector";
 import ZoomableLineChart from "./components/ZoomableLineChart";
+import { useGameStatistics } from "./hooks/useGameStatistics";
 
 function App() {
-  const [data, setData] = useState({
-    monthlyStatistics: null,
-    games: null,
-    loading: true,
-    error: null,
-  });
-  const [gameName, setGameName] = useState("super mario 64");
-
-  useEffect(() => {
-    const controller = new AbortController();
-    let active = true;
-    (async () => {
-      setData({
-        monthlyStatistics: null,
-        games: null,
-        loading: true,
-        error: null,
-      });
-      try {
-        const { monthlyStatistics, games } = await loadGameStatistics(
-          gameName,
-          {
-            signal: controller.signal,
-          },
-        );
-        if (active) {
-          setData({ monthlyStatistics, games, loading: false, error: null });
-        }
-      } catch (error) {
-        if (active) {
-          setData({
-            monthlyStatistics: null,
-            games: null,
-            loading: false,
-            error:
-              error.message === "ゲームが見つかりませんでした。"
-                ? error.message
-                : "データを取得できませんでした。時間をおいて再試行してください。",
-          });
-        }
-      }
-    })();
-    return () => {
-      active = false;
-      controller.abort();
-    };
-  }, [gameName]);
+  const { gameName, setGameName, games, monthlyStatistics, status, error } =
+    useGameStatistics();
 
   const margin = {
     top: 50,
@@ -73,17 +27,15 @@ function App() {
     <div className="min-h-screen bg-slate-50 text-slate-900">
       <Header />
       <main className="mx-auto max-w-5xl px-4 py-6 sm:px-6">
-        <Selector
-          {...{ gameNameStatus: [gameName, setGameName], games: data.games }}
-        />
-        {data.error ? (
+        <Selector {...{ gameNameStatus: [gameName, setGameName], games }} />
+        {status === "error" ? (
           <p role="alert" className="py-6 text-center text-red-700">
-            {data.error}
+            {error}
           </p>
         ) : (
           <ZoomableLineChart
             {...{
-              monthlyStatistics: data.monthlyStatistics,
+              monthlyStatistics,
               width,
               height,
               margin,

@@ -26,7 +26,8 @@ pnpm dev
 
 ## 主な構成
 
-- `src/App.jsx`: 画面全体の構成、検索対象ゲーム名の状態管理
+- `src/App.jsx`: 画面全体の表示構成
+- `src/hooks/useGameStatistics.js`: ゲーム検索の状態、取得、エラー処理
 - `src/application/loadGameStatistics.mjs`: ゲーム検索から集計までのユースケース
 - `src/domain/monthlyRunStatistics.mjs`: 月別の記録数と新規プレイヤー数の計算
 - `src/infrastructure/speedrunClient.mjs`: speedrun.com API との通信とデータ変換
@@ -37,6 +38,8 @@ pnpm dev
 ## 設計の考え方
 
 画面は `loadGameStatistics` にゲーム名を渡します。ユースケースは API クライアントからゲームと記録を取得し、月別集計を呼び出します。
+
+React の画面からユースケースを呼ぶ処理は `useGameStatistics` にまとめています。`App` はフックが返す状態に応じて、検索フォーム、グラフ、エラーを表示します。
 
 - **ドメイン**: 「新規プレイヤーは、そのゲームで以前の月に登場していない登録済みプレイヤー」という集計ルールを持ちます。通信や React には依存しません。
 - **アプリケーション**: 検索、記録取得、集計の順序を決めます。外部 API の URL やレスポンス形式は扱いません。
