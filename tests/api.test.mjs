@@ -3,6 +3,7 @@ import test from "node:test";
 import api from "../src/api.mjs";
 
 const reply = (data, ok = true) => ({ ok, json: async () => ({ data }) });
+const game = { id: "game-1", names: { international: "Game & More" } };
 
 test("fetches every page and counts each new player once", async (t) => {
   const originalFetch = globalThis.fetch;
@@ -14,7 +15,7 @@ test("fetches every page and counts each new player once", async (t) => {
   globalThis.fetch = async (url) => {
     if (url.pathname.endsWith("/games")) {
       assert.equal(url.searchParams.get("name"), "Game & More");
-      return reply([{ id: "game-1" }]);
+      return reply([game]);
     }
     const offset = Number(url.searchParams.get("offset"));
     offsets.push(offset);
@@ -33,7 +34,8 @@ test("fetches every page and counts each new player once", async (t) => {
     ]);
   };
 
-  const { monthlyStatistics } = await api("Game & More");
+  const { monthlyStatistics, games } = await api("Game & More");
+  assert.deepEqual(games, [{ id: "game-1", name: "Game & More" }]);
   assert.deepEqual(offsets, [0, 200]);
   assert.deepEqual(
     monthlyStatistics
@@ -65,8 +67,6 @@ test("reports a failed runs request", async (t) => {
     globalThis.fetch = originalFetch;
   });
   globalThis.fetch = async (url) =>
-    url.pathname.endsWith("/games")
-      ? reply([{ id: "game-1" }])
-      : reply([], false);
+    url.pathname.endsWith("/games") ? reply([game]) : reply([], false);
   await assert.rejects(api("Game"), /記録の取得に失敗しました/);
 });

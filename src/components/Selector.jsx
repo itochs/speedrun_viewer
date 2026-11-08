@@ -58,9 +58,9 @@ function Selector({ gameNameStatus, games }) {
               setGameName(event.target.value);
             }}
           >
-            {games.data.map(({ names }, i) => (
-              <option key={i} value={names.international}>
-                {names.international}
+            {games.map(({ id, name }) => (
+              <option key={id} value={name}>
+                {name}
               </option>
             ))}
           </select>
