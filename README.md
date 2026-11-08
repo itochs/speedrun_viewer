@@ -5,7 +5,7 @@ speedrun.com API を使って、ゲームごとの投稿記録数と新規プレ
 
 ## 開発環境
 
-- Node.js 18 以上を推奨
+- Node.js 20.19 以上、または 22.12 以上
 - pnpm 8 系
 
 ## セットアップ
@@ -22,11 +22,12 @@ pnpm dev
 - `pnpm dev`: 開発サーバー起動
 - `pnpm build`: 本番ビルド
 - `pnpm preview`: ビルド成果物のローカル確認
+- `pnpm test`: API 取得・集計のテスト
 
 ## 主な構成
 
 - `src/App.jsx`: 画面全体の構成、検索対象ゲーム名の状態管理
-- `src/api.jsx`: speedrun.com API の取得・整形ロジック
+- `src/api.mjs`: speedrun.com API の取得・整形ロジック
 - `src/components/Selector.jsx`: ゲーム検索フォーム、候補選択 UI
 - `src/components/ZoomableLineChart.jsx`: D3 によるズーム可能な折れ線グラフ
 - `src/style.css`: Tailwind CSS のエントリ（`@import "tailwindcss";`）
