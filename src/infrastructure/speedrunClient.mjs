@@ -16,23 +16,46 @@ export const speedrunClient = {
   },
 
   async fetchRuns(gameId, { signal } = {}) {
+    // API v1 rejects offset=10000 even when the previous page links to it.
+    const maxOffset = 10000;
     const runs = [];
-    const max = 200;
-    let offset = 0;
-    const url = new URL("https://www.speedrun.com/api/v1/runs");
-    url.search = new URLSearchParams({
+    const seenUrls = new Set();
+    const seenPages = new Set();
+    let truncated = false;
+    let pageUrl = new URL("https://www.speedrun.com/api/v1/runs");
+    pageUrl.search = new URLSearchParams({
       game: gameId,
       orderby: "verify-date",
-      max,
+      max: 200,
+      offset: 0,
     });
 
-    while (true) {
-      url.searchParams.set("offset", offset);
-      const response = await fetch(url, { signal });
+    while (pageUrl != null) {
+      const requestUrl = pageUrl.toString();
+      if (seenUrls.has(requestUrl)) {
+        throw new Error("同じ記録ページが繰り返されています。");
+      }
+      seenUrls.add(requestUrl);
+
+      const response = await fetch(pageUrl, { signal });
       if (!response.ok) {
         throw new Error("記録の取得に失敗しました。");
       }
-      const { data: page } = await response.json();
+      const { data: page, pagination } = await response.json();
+      if (!Array.isArray(page) || pagination == null) {
+        throw new Error("記録ページの情報が不正です。");
+      }
+      if (pagination.offset !== Number(pageUrl.searchParams.get("offset"))) {
+        throw new Error("記録ページの位置が一致しません。");
+      }
+      const pageIds = page.map(({ id }) => id);
+      if (pageIds.length > 0 && pageIds.every((id) => id != null)) {
+        const pageKey = pageIds.join(",");
+        if (seenPages.has(pageKey)) {
+          throw new Error("同じ記録ページが繰り返されています。");
+        }
+        seenPages.add(pageKey);
+      }
       runs.push(
         ...page
           .filter((item) => item.submitted != null)
@@ -41,12 +64,17 @@ export const speedrunClient = {
             playerIds: item.players.map(({ id }) => id),
           })),
       );
-      if (page.length < max) {
+      const nextLink = pagination.links?.find(({ rel }) => rel === "next");
+      pageUrl = nextLink ? new URL(nextLink.uri, requestUrl) : null;
+      if (
+        pageUrl != null &&
+        Number(pageUrl.searchParams.get("offset")) >= maxOffset
+      ) {
+        truncated = true;
         break;
       }
-      offset += page.length;
     }
 
-    return runs;
+    return { runs, truncated };
   },
 };

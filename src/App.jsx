@@ -6,8 +6,15 @@ import ZoomableLineChart from "./components/ZoomableLineChart";
 import { useGameStatistics } from "./hooks/useGameStatistics";
 
 function App() {
-  const { gameName, setGameName, games, monthlyStatistics, status, error } =
-    useGameStatistics();
+  const {
+    gameName,
+    setGameName,
+    games,
+    monthlyStatistics,
+    truncated,
+    status,
+    error,
+  } = useGameStatistics();
 
   const margin = {
     top: 50,
@@ -28,6 +35,11 @@ function App() {
       <Header />
       <main className="mx-auto max-w-5xl px-4 py-6 sm:px-6">
         <Selector {...{ gameNameStatus: [gameName, setGameName], games }} />
+        {truncated && (
+          <p role="status" className="mt-4 text-center text-amber-800">
+            API の取得上限により、先頭 10,000 件の範囲のみを集計しています。
+          </p>
+        )}
         {status === "error" ? (
           <p role="alert" className="py-6 text-center text-red-700">
             {error}

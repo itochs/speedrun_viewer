@@ -15,7 +15,10 @@ test("loads the first matching game and aggregates its runs", async () => {
     },
     async fetchRuns(id, options) {
       calls.push(["runs", id, options.signal]);
-      return [{ submittedAt: new Date("2020-01-10"), playerIds: ["a"] }];
+      return {
+        runs: [{ submittedAt: new Date("2020-01-10"), playerIds: ["a"] }],
+        truncated: false,
+      };
     },
   };
 
@@ -34,6 +37,7 @@ test("loads the first matching game and aggregates its runs", async () => {
     runCount: 1,
     newPlayerCount: 1,
   });
+  assert.equal(result.truncated, false);
 });
 
 test("does not request runs when no game matches", async () => {

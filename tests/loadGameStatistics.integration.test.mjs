@@ -2,8 +2,23 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { loadGameStatistics } from "../src/application/loadGameStatistics.mjs";
 
-const reply = (data, ok = true) => ({ ok, json: async () => ({ data }) });
+const reply = (data, ok = true, pagination) => ({
+  ok,
+  json: async () => ({ data, pagination }),
+});
 const game = { id: "game-1", names: { international: "Game & More" } };
+const runPagination = (offset, nextOffset) => ({
+  offset,
+  links:
+    nextOffset == null
+      ? []
+      : [
+          {
+            rel: "next",
+            uri: `https://www.speedrun.com/api/v1/runs?game=game-1&orderby=verify-date&max=200&offset=${nextOffset}`,
+          },
+        ],
+});
 
 test("fetches every page and counts each new player once", async (t) => {
   const originalFetch = globalThis.fetch;
@@ -20,22 +35,41 @@ test("fetches every page and counts each new player once", async (t) => {
     const offset = Number(url.searchParams.get("offset"));
     offsets.push(offset);
     if (offset === 0) {
-      return reply([
-        ...Array.from({ length: 199 }, () => ({
-          submitted: "2020-01-10",
-          players: [{ id: "player-a" }],
-        })),
-        { submitted: null, players: [] },
-      ]);
+      return reply(
+        [
+          ...Array.from({ length: 199 }, (_, index) => ({
+            id: `run-${index}`,
+            submitted: "2020-01-10",
+            players: [{ id: "player-a" }],
+          })),
+          { id: "run-199", submitted: null, players: [] },
+        ],
+        true,
+        runPagination(0, 200),
+      );
     }
-    return reply([
-      { submitted: "2020-04-10", players: [{ id: "player-b" }] },
-      { submitted: "2020-04-11", players: [{ id: "player-b" }] },
-    ]);
+    return reply(
+      [
+        {
+          id: "run-200",
+          submitted: "2020-04-10",
+          players: [{ id: "player-b" }],
+        },
+        {
+          id: "run-201",
+          submitted: "2020-04-11",
+          players: [{ id: "player-b" }],
+        },
+      ],
+      true,
+      runPagination(200),
+    );
   };
 
-  const { monthlyStatistics, games } = await loadGameStatistics("Game & More");
+  const { monthlyStatistics, games, truncated } =
+    await loadGameStatistics("Game & More");
   assert.deepEqual(games, [{ id: "game-1", name: "Game & More" }]);
+  assert.equal(truncated, false);
   assert.deepEqual(offsets, [0, 200]);
   assert.deepEqual(
     monthlyStatistics

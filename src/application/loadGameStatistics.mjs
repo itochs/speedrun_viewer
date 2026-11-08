@@ -11,10 +11,11 @@ export async function loadGameStatistics(
     throw new Error("ゲームが見つかりませんでした。");
   }
 
-  const runs = await client.fetchRuns(gameId, { signal });
+  const { runs, truncated } = await client.fetchRuns(gameId, { signal });
 
   return {
     monthlyStatistics: calculateMonthlyRunStatistics(runs),
     games,
+    truncated,
   };
 }

@@ -7,6 +7,7 @@ export function useGameStatistics(initialGameName = "super mario 64") {
     status: "loading",
     monthlyStatistics: null,
     games: null,
+    truncated: false,
     error: null,
   });
 
@@ -18,16 +19,18 @@ export function useGameStatistics(initialGameName = "super mario 64") {
       status: "loading",
       monthlyStatistics: null,
       games: null,
+      truncated: false,
       error: null,
     });
 
     loadGameStatistics(gameName, { signal: controller.signal })
-      .then(({ monthlyStatistics, games }) => {
+      .then(({ monthlyStatistics, games, truncated }) => {
         if (active) {
           setResult({
             status: "success",
             monthlyStatistics,
             games,
+            truncated,
             error: null,
           });
         }
@@ -38,10 +41,13 @@ export function useGameStatistics(initialGameName = "super mario 64") {
             status: "error",
             monthlyStatistics: null,
             games: null,
-            error:
-              error.message === "ゲームが見つかりませんでした。"
-                ? error.message
-                : "データを取得できませんでした。時間をおいて再試行してください。",
+            truncated: false,
+            error: [
+              "ゲームが見つかりませんでした。",
+              "同じ記録ページが繰り返されています。",
+            ].includes(error.message)
+              ? error.message
+              : "データを取得できませんでした。時間をおいて再試行してください。",
           });
         }
       });
