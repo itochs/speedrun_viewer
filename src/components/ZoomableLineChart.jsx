@@ -1,4 +1,6 @@
 import { useZoomableLineChart } from "../hooks/useZoomableLineChart";
+import XAxis from "./XAxis";
+import YAxis from "./YAxis";
 
 function ZoomableLineChart({
   monthlyStatistics,
@@ -59,46 +61,13 @@ function ZoomableLineChart({
               fill="none"
             />
           </g>
-          <g
-            className="x-axis"
-            transform={`translate(${margin.left}, ${height - margin.bottom})`}
-          >
-            <path d={`M0,6V0H${plotWidth}`} fill="none" stroke="currentColor" />
-            {xTicks.map(({ x, label }) => (
-              <g key={label} transform={`translate(${x}, 0)`}>
-                <line y2={6} stroke="currentColor" />
-                <text y={9} dy="0.71em" fontSize={10} textAnchor="middle">
-                  {label}
-                </text>
-              </g>
-            ))}
-          </g>
-          <g
-            className="y-axis"
-            transform={`translate(${margin.left}, ${margin.top})`}
-          >
-            <line
-              x1={0}
-              y1={0}
-              x2={0}
-              y2={plotHeight}
-              stroke="black"
-              strokeWidth={1}
-            />
-            {yTicks.map((item) => (
-              <g key={item.label} transform={`translate(0, ${item.y})`}>
-                <line x1={0} y1={0} x2={-5} y2={0} stroke="black" />
-                <text
-                  x={-10}
-                  fontSize={12}
-                  textAnchor="end"
-                  dominantBaseline="middle"
-                >
-                  {item.label}
-                </text>
-              </g>
-            ))}
-          </g>
+          <XAxis
+            ticks={xTicks}
+            plotWidth={plotWidth}
+            margin={margin}
+            height={height}
+          />
+          <YAxis ticks={yTicks} plotHeight={plotHeight} margin={margin} />
           <g>{children}</g>
         </svg>
       </div>

@@ -34,6 +34,7 @@ pnpm dev
 - `src/infrastructure/speedrunClient.mjs`: speedrun.com API との通信とデータ変換
 - `src/components/Selector.jsx`: ゲーム検索フォーム、候補選択 UI
 - `src/components/ZoomableLineChart.jsx`: 折れ線グラフの SVG 表示
+- `src/components/XAxis.jsx`・`src/components/YAxis.jsx`: 軸線と目盛りの表示
 - `src/style.css`: Tailwind CSS のエントリ（`@import "tailwindcss";`）
 
 ## 設計の考え方
