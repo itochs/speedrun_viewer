@@ -1,6 +1,9 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { loadGameStatistics } from "../src/application/loadGameStatistics.mjs";
+import {
+  loadGameStatistics,
+  loadNextGameStatistics,
+} from "../src/application/loadGameStatistics.mjs";
 
 const reply = (data, ok = true, pagination) => ({
   ok,
@@ -20,7 +23,7 @@ const runPagination = (offset, nextOffset) => ({
         ],
 });
 
-test("fetches every page and counts each new player once", async (t) => {
+test("loads one page initially and adds the next only when requested", async (t) => {
   const originalFetch = globalThis.fetch;
   t.after(() => {
     globalThis.fetch = originalFetch;
@@ -66,11 +69,18 @@ test("fetches every page and counts each new player once", async (t) => {
     );
   };
 
-  const { monthlyStatistics, games, truncated } =
-    await loadGameStatistics("Game & More");
-  assert.deepEqual(games, [{ id: "game-1", name: "Game & More" }]);
-  assert.equal(truncated, false);
+  const first = await loadGameStatistics("Game & More");
+  assert.deepEqual(first.games, [{ id: "game-1", name: "Game & More" }]);
+  assert.deepEqual(offsets, [0]);
+  assert.equal(first.runs.length, 199);
+  assert.equal(first.monthlyStatistics[0].newPlayerCount, 1);
+
+  const { monthlyStatistics, runs, nextCursor, truncated } =
+    await loadNextGameStatistics(first);
   assert.deepEqual(offsets, [0, 200]);
+  assert.equal(runs.length, 201);
+  assert.equal(nextCursor, null);
+  assert.equal(truncated, false);
   assert.deepEqual(
     monthlyStatistics
       .filter(({ runCount }) => runCount > 0)

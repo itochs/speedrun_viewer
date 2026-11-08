@@ -15,66 +15,59 @@ export const speedrunClient = {
     return data.map(({ id, names }) => ({ id, name: names.international }));
   },
 
-  async fetchRuns(gameId, { signal } = {}) {
+  async fetchRunPage(gameId, { cursor, signal } = {}) {
     // API v1 rejects offset=10000 even when the previous page links to it.
     const maxOffset = 10000;
-    const runs = [];
-    const seenUrls = new Set();
-    const seenPages = new Set();
-    let truncated = false;
-    let pageUrl = new URL("https://www.speedrun.com/api/v1/runs");
-    pageUrl.search = new URLSearchParams({
-      game: gameId,
-      orderby: "verify-date",
-      max: 200,
-      offset: 0,
-    });
+    const pageUrl = cursor
+      ? new URL(cursor)
+      : new URL("https://www.speedrun.com/api/v1/runs");
+    if (cursor == null) {
+      pageUrl.search = new URLSearchParams({
+        game: gameId,
+        orderby: "verify-date",
+        max: 200,
+        offset: 0,
+      });
+    }
+    if (
+      pageUrl.origin !== "https://www.speedrun.com" ||
+      pageUrl.pathname !== "/api/v1/runs" ||
+      pageUrl.searchParams.get("game") !== gameId
+    ) {
+      throw new Error("記録ページのリンクが不正です。");
+    }
 
-    while (pageUrl != null) {
-      const requestUrl = pageUrl.toString();
-      if (seenUrls.has(requestUrl)) {
+    const response = await fetch(pageUrl, { signal });
+    if (!response.ok) {
+      throw new Error("記録の取得に失敗しました。");
+    }
+    const { data: page, pagination } = await response.json();
+    if (!Array.isArray(page) || pagination == null) {
+      throw new Error("記録ページの情報が不正です。");
+    }
+    const offset = Number(pageUrl.searchParams.get("offset"));
+    if (pagination.offset !== offset) {
+      throw new Error("記録ページの位置が一致しません。");
+    }
+    const runs = page
+      .filter((item) => item.submitted != null)
+      .map((item) => ({
+        id: item.id,
+        submittedAt: new Date(item.submitted),
+        playerIds: item.players.map(({ id }) => id),
+      }));
+    const nextLink = pagination.links?.find(({ rel }) => rel === "next");
+    const nextUrl = nextLink ? new URL(nextLink.uri, pageUrl) : null;
+    if (nextUrl != null) {
+      const nextOffset = Number(nextUrl.searchParams.get("offset"));
+      if (!Number.isInteger(nextOffset) || nextOffset <= offset) {
         throw new Error("同じ記録ページが繰り返されています。");
       }
-      seenUrls.add(requestUrl);
-
-      const response = await fetch(pageUrl, { signal });
-      if (!response.ok) {
-        throw new Error("記録の取得に失敗しました。");
-      }
-      const { data: page, pagination } = await response.json();
-      if (!Array.isArray(page) || pagination == null) {
-        throw new Error("記録ページの情報が不正です。");
-      }
-      if (pagination.offset !== Number(pageUrl.searchParams.get("offset"))) {
-        throw new Error("記録ページの位置が一致しません。");
-      }
-      const pageIds = page.map(({ id }) => id);
-      if (pageIds.length > 0 && pageIds.every((id) => id != null)) {
-        const pageKey = pageIds.join(",");
-        if (seenPages.has(pageKey)) {
-          throw new Error("同じ記録ページが繰り返されています。");
-        }
-        seenPages.add(pageKey);
-      }
-      runs.push(
-        ...page
-          .filter((item) => item.submitted != null)
-          .map((item) => ({
-            submittedAt: new Date(item.submitted),
-            playerIds: item.players.map(({ id }) => id),
-          })),
-      );
-      const nextLink = pagination.links?.find(({ rel }) => rel === "next");
-      pageUrl = nextLink ? new URL(nextLink.uri, requestUrl) : null;
-      if (
-        pageUrl != null &&
-        Number(pageUrl.searchParams.get("offset")) >= maxOffset
-      ) {
-        truncated = true;
-        break;
+      if (nextOffset >= maxOffset) {
+        return { runs, nextCursor: null, truncated: true };
       }
     }
 
-    return { runs, truncated };
+    return { runs, nextCursor: nextUrl?.toString() ?? null, truncated: false };
   },
 };

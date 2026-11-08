@@ -7,7 +7,21 @@ const nextLink = (offset) => ({
   uri: `https://www.speedrun.com/api/v1/runs?game=game-1&orderby=verify-date&max=200&offset=${offset}`,
 });
 
-test("stops after a full page when the API has no next link", async (t) => {
+const runPage = (offset, nextOffset) => ({
+  data: Array.from({ length: 200 }, (_, index) => ({
+    id: `run-${offset + index}`,
+    submitted: "2020-01-01",
+    players: [],
+  })),
+  pagination: {
+    offset,
+    size: 200,
+    max: 200,
+    links: nextOffset == null ? [] : [nextLink(nextOffset)],
+  },
+});
+
+test("fetches only one page even when it contains 200 runs", async (t) => {
   const originalFetch = globalThis.fetch;
   t.after(() => {
     globalThis.fetch = originalFetch;
@@ -15,91 +29,52 @@ test("stops after a full page when the API has no next link", async (t) => {
   const offsets = [];
   globalThis.fetch = async (url) => {
     offsets.push(Number(url.searchParams.get("offset")));
-    return {
-      ok: true,
-      json: async () => ({
-        data: Array.from({ length: 200 }, (_, index) => ({
-          id: `run-${index}`,
-          submitted: "2020-01-01",
-          players: [],
-        })),
-        pagination: { offset: 0, size: 200, max: 200, links: [] },
-      }),
-    };
+    return { ok: true, json: async () => runPage(0, 200) };
   };
 
-  const { runs, truncated } = await speedrunClient.fetchRuns("game-1");
+  const { runs, nextCursor, truncated } =
+    await speedrunClient.fetchRunPage("game-1");
   assert.equal(runs.length, 200);
+  assert.equal(nextCursor, nextLink(200).uri);
   assert.equal(truncated, false);
   assert.deepEqual(offsets, [0]);
 });
 
-test("does not request offset 3800 twice when a next link loops", async (t) => {
+test("rejects an offset 3800 link that points to itself", async (t) => {
   const originalFetch = globalThis.fetch;
   t.after(() => {
     globalThis.fetch = originalFetch;
   });
   const offsets = [];
   globalThis.fetch = async (url) => {
-    const offset = Number(url.searchParams.get("offset"));
-    offsets.push(offset);
-    const nextOffset = offset === 3800 ? 3800 : offset + 200;
-    return {
-      ok: true,
-      json: async () => ({
-        data: Array.from({ length: 200 }, (_, index) => ({
-          id: `run-${offset + index}`,
-          submitted: "2020-01-01",
-          players: [],
-        })),
-        pagination: {
-          offset,
-          size: 200,
-          max: 200,
-          links: [nextLink(nextOffset)],
-        },
-      }),
-    };
+    offsets.push(Number(url.searchParams.get("offset")));
+    return { ok: true, json: async () => runPage(3800, 3800) };
   };
 
   await assert.rejects(
-    speedrunClient.fetchRuns("game-1"),
+    speedrunClient.fetchRunPage("game-1", { cursor: nextLink(3800).uri }),
     /同じ記録ページが繰り返されています/,
   );
-  assert.equal(offsets.filter((offset) => offset === 3800).length, 1);
-  assert.deepEqual(offsets.slice(-2), [3600, 3800]);
+  assert.deepEqual(offsets, [3800]);
 });
 
-test("stops before the API's 10000-offset limit and marks the data partial", async (t) => {
+test("stops before offset 10000 and marks the loaded range partial", async (t) => {
   const originalFetch = globalThis.fetch;
   t.after(() => {
     globalThis.fetch = originalFetch;
   });
   const offsets = [];
   globalThis.fetch = async (url) => {
-    const offset = Number(url.searchParams.get("offset"));
-    offsets.push(offset);
-    return {
-      ok: true,
-      json: async () => ({
-        data: Array.from({ length: 200 }, (_, index) => ({
-          id: `run-${offset + index}`,
-          submitted: "2020-01-01",
-          players: [],
-        })),
-        pagination: {
-          offset,
-          size: 200,
-          max: 200,
-          links: [nextLink(offset + 200)],
-        },
-      }),
-    };
+    offsets.push(Number(url.searchParams.get("offset")));
+    return { ok: true, json: async () => runPage(9800, 10000) };
   };
 
-  const { runs, truncated } = await speedrunClient.fetchRuns("game-1");
-  assert.equal(runs.length, 10000);
+  const { runs, nextCursor, truncated } = await speedrunClient.fetchRunPage(
+    "game-1",
+    { cursor: nextLink(9800).uri },
+  );
+  assert.equal(runs.length, 200);
+  assert.equal(nextCursor, null);
   assert.equal(truncated, true);
-  assert.equal(offsets.at(-1), 9800);
-  assert.equal(offsets.includes(10000), false);
+  assert.deepEqual(offsets, [9800]);
 });
