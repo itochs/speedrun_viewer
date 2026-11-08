@@ -1,4 +1,7 @@
-function XAxis({ ticks, plotWidth, margin, height }) {
+import { createXTicks } from "../chart/ticks.mjs";
+
+function XAxis({ scale, monthlyStatistics, plotWidth, margin, height }) {
+  const ticks = createXTicks(scale, monthlyStatistics);
   return (
     <g
       className="x-axis"

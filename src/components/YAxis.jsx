@@ -1,4 +1,7 @@
-function YAxis({ ticks, plotHeight, margin }) {
+import { createYTicks } from "../chart/ticks.mjs";
+
+function YAxis({ scale, plotHeight, margin }) {
+  const ticks = createYTicks(scale);
   return (
     <g
       className="y-axis"

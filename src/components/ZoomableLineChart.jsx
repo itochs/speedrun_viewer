@@ -16,8 +16,8 @@ function ZoomableLineChart({
     plotHeight,
     runLinePath,
     newPlayerLinePath,
-    xTicks,
-    yTicks,
+    drawScale,
+    yScale,
   } = useZoomableLineChart({ monthlyStatistics, width, height, margin });
 
   if (monthlyStatistics == null) {
@@ -62,12 +62,13 @@ function ZoomableLineChart({
             />
           </g>
           <XAxis
-            ticks={xTicks}
+            scale={drawScale}
+            monthlyStatistics={monthlyStatistics}
             plotWidth={plotWidth}
             margin={margin}
             height={height}
           />
-          <YAxis ticks={yTicks} plotHeight={plotHeight} margin={margin} />
+          <YAxis scale={yScale} plotHeight={plotHeight} margin={margin} />
           <g>{children}</g>
         </svg>
       </div>
