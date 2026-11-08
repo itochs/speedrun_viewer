@@ -1,7 +1,9 @@
+import { calculateMonthlyRunStatistics } from "./domain/monthlyRunStatistics.mjs";
+
 function parseData(data) {
   return data.map((item) => ({
-    ...item,
-    submitted: new Date(item.submitted),
+    submittedAt: new Date(item.submitted),
+    playerIds: item.players.map(({ id }) => id),
   }));
 }
 
@@ -18,41 +20,6 @@ async function getGameName(gamename, signal, max = 10) {
     throw new Error("ゲームの検索に失敗しました。");
   }
   return response.json();
-}
-
-function getYearData(data) {
-  const years = [
-    ...new Set(data.map((item) => item.submitted.getUTCFullYear())),
-  ].sort((a, b) => a - b);
-  const oldPlayers = new Set();
-  const months = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
-
-  return years.flatMap((year) => {
-    const yearData = data.filter(
-      (item) => item.submitted.getUTCFullYear() === year,
-    );
-    return months.map((month) => {
-      const monthData = yearData.filter(
-        (item) => item.submitted.getUTCMonth() === month - 1,
-      );
-      const newPlayers = new Set();
-      monthData.forEach((item) => {
-        item.players.forEach(({ id }) => {
-          if (id != null && !oldPlayers.has(id)) {
-            newPlayers.add(id);
-          }
-        });
-      });
-      newPlayers.forEach((id) => oldPlayers.add(id));
-
-      return {
-        year,
-        month,
-        len: monthData.length,
-        newbielen: newPlayers.size,
-      };
-    });
-  });
 }
 
 export default async function api(gamename, { signal } = {}) {
@@ -86,5 +53,8 @@ export default async function api(gamename, { signal } = {}) {
     offset += page.length;
   }
 
-  return { ymData: getYearData(parseData(rundata)), games };
+  return {
+    monthlyStatistics: calculateMonthlyRunStatistics(parseData(rundata)),
+    games,
+  };
 }

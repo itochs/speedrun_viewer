@@ -1,21 +1,33 @@
 import * as d3 from "d3";
 import { useEffect, useRef, useState } from "react";
 
-function ZoomableLineChart({ ymData, width, height, margin, color, children }) {
+function ZoomableLineChart({
+  monthlyStatistics,
+  width,
+  height,
+  margin,
+  color,
+  children,
+}) {
   const svgRef = useRef();
   const [currentZoom, setCurrentZoom] = useState();
 
   const xScale = d3
     .scaleLinear()
-    .domain([0, (ymData?.length ?? 1) - 1])
+    .domain([0, (monthlyStatistics?.length ?? 1) - 1])
     .range([0, width - margin.left - margin.right])
     .nice();
   const yScale = d3
     .scaleLinear()
     .domain(
-      ymData == null || ymData.length === 0
+      monthlyStatistics == null || monthlyStatistics.length === 0
         ? [0, 1]
-        : [0, d3.max(ymData, (d) => Math.max(d.len, d.newbielen))],
+        : [
+            0,
+            d3.max(monthlyStatistics, (d) =>
+              Math.max(d.runCount, d.newPlayerCount),
+            ),
+          ],
     )
     .range([height - margin.top - margin.bottom, 0])
     .nice();
@@ -23,12 +35,12 @@ function ZoomableLineChart({ ymData, width, height, margin, color, children }) {
   const line = d3
     .line()
     .x((d, i) => xScale(i))
-    .y((d) => yScale(d.len))
+    .y((d) => yScale(d.runCount))
     .curve(d3.curveLinear);
   const newline = d3
     .line()
     .x((d, i) => xScale(i))
-    .y((d) => yScale(d.newbielen))
+    .y((d) => yScale(d.newPlayerCount))
     .curve(d3.curveLinear);
 
   const yTicks = yScale.ticks().map((y) => ({
@@ -37,7 +49,7 @@ function ZoomableLineChart({ ymData, width, height, margin, color, children }) {
   }));
 
   useEffect(() => {
-    if (ymData == null || ymData.length === 0) {
+    if (monthlyStatistics == null || monthlyStatistics.length === 0) {
       return;
     }
 
@@ -47,7 +59,7 @@ function ZoomableLineChart({ ymData, width, height, margin, color, children }) {
 
     svgContent
       .select(".line")
-      .data([ymData])
+      .data([monthlyStatistics])
       .join("path")
       .attr("stroke", color.all.fill)
       .attr("stroke-width", 1)
@@ -59,13 +71,13 @@ function ZoomableLineChart({ ymData, width, height, margin, color, children }) {
         d3
           .line()
           .x((d, i) => drawScale(i))
-          .y((d) => yScale(d.len))
+          .y((d) => yScale(d.runCount))
           .curve(d3.curveLinear),
       );
 
     svgContent
       .select(".newline")
-      .data([ymData])
+      .data([monthlyStatistics])
       .join("path")
       .attr("stroke", color.new.fill)
       .attr("stroke-width", 1)
@@ -77,20 +89,20 @@ function ZoomableLineChart({ ymData, width, height, margin, color, children }) {
         d3
           .line()
           .x((d, i) => drawScale(i))
-          .y((d) => yScale(d.newbielen))
+          .y((d) => yScale(d.newPlayerCount))
           .curve(d3.curveLinear),
       );
 
     const xAxis = d3.axisBottom(drawScale).tickFormat((d) => {
       if (
-        d >= ymData.length ||
+        d >= monthlyStatistics.length ||
         d < 0 ||
         !Number.isInteger(d) ||
-        ymData[d] == null
+        monthlyStatistics[d] == null
       ) {
         return "";
       }
-      return `${ymData[d].year}年${ymData[d].month}月`;
+      return `${monthlyStatistics[d].year}年${monthlyStatistics[d].month}月`;
     });
 
     svg
@@ -113,12 +125,21 @@ function ZoomableLineChart({ ymData, width, height, margin, color, children }) {
       });
 
     svg.call(zoomBehavior);
-  }, [currentZoom, ymData, xScale, yScale, color, margin, width, height]);
+  }, [
+    currentZoom,
+    monthlyStatistics,
+    xScale,
+    yScale,
+    color,
+    margin,
+    width,
+    height,
+  ]);
 
-  if (ymData == null) {
+  if (monthlyStatistics == null) {
     return <p className="py-6 text-center text-slate-600">loading</p>;
   }
-  if (ymData.length === 0) {
+  if (monthlyStatistics.length === 0) {
     return (
       <p className="py-6 text-center text-slate-600">記録がありません。</p>
     );
@@ -139,8 +160,8 @@ function ZoomableLineChart({ ymData, width, height, margin, color, children }) {
             </clipPath>
           </defs>
           <g className="content" clipPath="url(#clip)">
-            <path className="line" d={line(ymData)} />
-            <path className="newline" d={newline(ymData)} />
+            <path className="line" d={line(monthlyStatistics)} />
+            <path className="newline" d={newline(monthlyStatistics)} />
           </g>
           <g className="x-axis" />
           <g

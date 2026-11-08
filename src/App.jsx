@@ -8,7 +8,7 @@ import ZoomableLineChart from "./components/ZoomableLineChart";
 
 function App() {
   const [data, setData] = useState({
-    ymData: null,
+    monthlyStatistics: null,
     games: null,
     loading: true,
     error: null,
@@ -19,18 +19,23 @@ function App() {
     const controller = new AbortController();
     let active = true;
     (async () => {
-      setData({ ymData: null, games: null, loading: true, error: null });
+      setData({
+        monthlyStatistics: null,
+        games: null,
+        loading: true,
+        error: null,
+      });
       try {
-        const { ymData, games } = await api(gameName, {
+        const { monthlyStatistics, games } = await api(gameName, {
           signal: controller.signal,
         });
         if (active) {
-          setData({ ymData, games, loading: false, error: null });
+          setData({ monthlyStatistics, games, loading: false, error: null });
         }
       } catch (error) {
         if (active) {
           setData({
-            ymData: null,
+            monthlyStatistics: null,
             games: null,
             loading: false,
             error:
@@ -75,7 +80,7 @@ function App() {
         ) : (
           <ZoomableLineChart
             {...{
-              ymData: data.ymData,
+              monthlyStatistics: data.monthlyStatistics,
               width,
               height,
               margin,

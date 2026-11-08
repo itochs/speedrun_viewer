@@ -33,19 +33,19 @@ test("fetches every page and counts each new player once", async (t) => {
     ]);
   };
 
-  const { ymData } = await api("Game & More");
+  const { monthlyStatistics } = await api("Game & More");
   assert.deepEqual(offsets, [0, 200]);
   assert.deepEqual(
-    ymData
-      .filter(({ len }) => len > 0)
-      .map(({ month, len, newbielen }) => ({
+    monthlyStatistics
+      .filter(({ runCount }) => runCount > 0)
+      .map(({ month, runCount, newPlayerCount }) => ({
         month,
-        len,
-        newbielen,
+        runCount,
+        newPlayerCount,
       })),
     [
-      { month: 1, len: 199, newbielen: 1 },
-      { month: 4, len: 2, newbielen: 1 },
+      { month: 1, runCount: 199, newPlayerCount: 1 },
+      { month: 4, runCount: 2, newPlayerCount: 1 },
     ],
   );
 });
