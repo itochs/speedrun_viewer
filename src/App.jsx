@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import api from "./api";
+import api from "./api.mjs";
 import Footer from "./components/Footer";
 import Header from "./components/Header";
 import Legend from "./components/Legend";
@@ -11,16 +11,40 @@ function App() {
     ymData: null,
     games: null,
     loading: true,
+    error: null,
   });
   const [gameName, setGameName] = useState("super mario 64");
 
   useEffect(() => {
+    const controller = new AbortController();
+    let active = true;
     (async () => {
-      setData({ loading: true });
-      const result = await api(gameName);
-      const { ymData, games } = result;
-      setData({ ymData, games, loading: false });
+      setData({ ymData: null, games: null, loading: true, error: null });
+      try {
+        const { ymData, games } = await api(gameName, {
+          signal: controller.signal,
+        });
+        if (active) {
+          setData({ ymData, games, loading: false, error: null });
+        }
+      } catch (error) {
+        if (active) {
+          setData({
+            ymData: null,
+            games: null,
+            loading: false,
+            error:
+              error.message === "ゲームが見つかりませんでした。"
+                ? error.message
+                : "データを取得できませんでした。時間をおいて再試行してください。",
+          });
+        }
+      }
     })();
+    return () => {
+      active = false;
+      controller.abort();
+    };
   }, [gameName]);
 
   const margin = {
@@ -44,17 +68,23 @@ function App() {
         <Selector
           {...{ gameNameStatus: [gameName, setGameName], games: data.games }}
         />
-        <ZoomableLineChart
-          {...{
-            ymData: data.ymData,
-            width,
-            height,
-            margin,
-            color,
-          }}
-        >
-          <Legend {...{ width, margin, color }} />
-        </ZoomableLineChart>
+        {data.error ? (
+          <p role="alert" className="py-6 text-center text-red-700">
+            {data.error}
+          </p>
+        ) : (
+          <ZoomableLineChart
+            {...{
+              ymData: data.ymData,
+              width,
+              height,
+              margin,
+              color,
+            }}
+          >
+            <Legend {...{ width, margin, color }} />
+          </ZoomableLineChart>
+        )}
       </main>
       <Footer />
     </div>

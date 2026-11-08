@@ -13,7 +13,9 @@ function ZoomableLineChart({ ymData, width, height, margin, color, children }) {
   const yScale = d3
     .scaleLinear()
     .domain(
-      ymData == null || ymData.length === 0 ? [0, 1] : d3.extent(ymData, (d) => d.len),
+      ymData == null || ymData.length === 0
+        ? [0, 1]
+        : [0, d3.max(ymData, (d) => Math.max(d.len, d.newbielen))],
     )
     .range([height - margin.top - margin.bottom, 0])
     .nice();
@@ -80,7 +82,12 @@ function ZoomableLineChart({ ymData, width, height, margin, color, children }) {
       );
 
     const xAxis = d3.axisBottom(drawScale).tickFormat((d) => {
-      if (d >= ymData.length || d < 0 || !Number.isInteger(d) || ymData[d] == null) {
+      if (
+        d >= ymData.length ||
+        d < 0 ||
+        !Number.isInteger(d) ||
+        ymData[d] == null
+      ) {
         return "";
       }
       return `${ymData[d].year}年${ymData[d].month}月`;
@@ -110,6 +117,11 @@ function ZoomableLineChart({ ymData, width, height, margin, color, children }) {
 
   if (ymData == null) {
     return <p className="py-6 text-center text-slate-600">loading</p>;
+  }
+  if (ymData.length === 0) {
+    return (
+      <p className="py-6 text-center text-slate-600">記録がありません。</p>
+    );
   }
 
   return (

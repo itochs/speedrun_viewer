@@ -1,0 +1,72 @@
+import assert from "node:assert/strict";
+import test from "node:test";
+import api from "../src/api.mjs";
+
+const reply = (data, ok = true) => ({ ok, json: async () => ({ data }) });
+
+test("fetches every page and counts each new player once", async (t) => {
+  const originalFetch = globalThis.fetch;
+  t.after(() => {
+    globalThis.fetch = originalFetch;
+  });
+
+  const offsets = [];
+  globalThis.fetch = async (url) => {
+    if (url.pathname.endsWith("/games")) {
+      assert.equal(url.searchParams.get("name"), "Game & More");
+      return reply([{ id: "game-1" }]);
+    }
+    const offset = Number(url.searchParams.get("offset"));
+    offsets.push(offset);
+    if (offset === 0) {
+      return reply([
+        ...Array.from({ length: 199 }, () => ({
+          submitted: "2020-01-10",
+          players: [{ id: "player-a" }],
+        })),
+        { submitted: null, players: [] },
+      ]);
+    }
+    return reply([
+      { submitted: "2020-04-10", players: [{ id: "player-b" }] },
+      { submitted: "2020-04-11", players: [{ id: "player-b" }] },
+    ]);
+  };
+
+  const { ymData } = await api("Game & More");
+  assert.deepEqual(offsets, [0, 200]);
+  assert.deepEqual(
+    ymData
+      .filter(({ len }) => len > 0)
+      .map(({ month, len, newbielen }) => ({
+        month,
+        len,
+        newbielen,
+      })),
+    [
+      { month: 1, len: 199, newbielen: 1 },
+      { month: 4, len: 2, newbielen: 1 },
+    ],
+  );
+});
+
+test("reports a search with no matching game", async (t) => {
+  const originalFetch = globalThis.fetch;
+  t.after(() => {
+    globalThis.fetch = originalFetch;
+  });
+  globalThis.fetch = async () => reply([]);
+  await assert.rejects(api("missing"), /ゲームが見つかりませんでした/);
+});
+
+test("reports a failed runs request", async (t) => {
+  const originalFetch = globalThis.fetch;
+  t.after(() => {
+    globalThis.fetch = originalFetch;
+  });
+  globalThis.fetch = async (url) =>
+    url.pathname.endsWith("/games")
+      ? reply([{ id: "game-1" }])
+      : reply([], false);
+  await assert.rejects(api("Game"), /記録の取得に失敗しました/);
+});
