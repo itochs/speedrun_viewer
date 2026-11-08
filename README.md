@@ -29,6 +29,7 @@ pnpm dev
 - `src/App.jsx`: 画面全体の表示構成
 - `src/hooks/useGameStatistics.js`: ゲーム検索の状態、取得、エラー処理
 - `src/hooks/useZoomableLineChart.js`: グラフの座標計算とズーム状態
+- `src/chart/ticks.mjs`: X・Y 軸の目盛り位置とラベルの計算
 - `src/application/loadGameStatistics.mjs`: ゲーム検索から集計までのユースケース
 - `src/domain/monthlyRunStatistics.mjs`: 月別の記録数と新規プレイヤー数の計算
 - `src/infrastructure/speedrunClient.mjs`: speedrun.com API との通信とデータ変換

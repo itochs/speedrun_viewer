@@ -1,5 +1,6 @@
 import * as d3 from "d3";
 import { useEffect, useRef, useState } from "react";
+import { createXTicks, createYTicks } from "../chart/ticks.mjs";
 
 export function useZoomableLineChart({
   monthlyStatistics,
@@ -77,20 +78,7 @@ export function useZoomableLineChart({
     plotHeight,
     runLinePath: line(monthlyStatistics ?? []),
     newPlayerLinePath: newPlayerLine(monthlyStatistics ?? []),
-    xTicks: hasData
-      ? drawScale
-          .ticks()
-          .filter(
-            (index) =>
-              Number.isInteger(index) &&
-              index >= 0 &&
-              index < monthlyStatistics.length,
-          )
-          .map((index) => ({
-            x: drawScale(index),
-            label: `${monthlyStatistics[index].year}年${monthlyStatistics[index].month}月`,
-          }))
-      : [],
-    yTicks: yScale.ticks().map((value) => ({ y: yScale(value), label: value })),
+    xTicks: createXTicks(drawScale, monthlyStatistics),
+    yTicks: createYTicks(yScale),
   };
 }
