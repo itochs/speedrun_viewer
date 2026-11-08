@@ -1,5 +1,4 @@
-import * as d3 from "d3";
-import { useEffect, useRef, useState } from "react";
+import { useZoomableLineChart } from "../hooks/useZoomableLineChart";
 
 function ZoomableLineChart({
   monthlyStatistics,
@@ -9,132 +8,15 @@ function ZoomableLineChart({
   color,
   children,
 }) {
-  const svgRef = useRef();
-  const [currentZoom, setCurrentZoom] = useState();
-
-  const xScale = d3
-    .scaleLinear()
-    .domain([0, (monthlyStatistics?.length ?? 1) - 1])
-    .range([0, width - margin.left - margin.right])
-    .nice();
-  const yScale = d3
-    .scaleLinear()
-    .domain(
-      monthlyStatistics == null || monthlyStatistics.length === 0
-        ? [0, 1]
-        : [
-            0,
-            d3.max(monthlyStatistics, (d) =>
-              Math.max(d.runCount, d.newPlayerCount),
-            ),
-          ],
-    )
-    .range([height - margin.top - margin.bottom, 0])
-    .nice();
-
-  const line = d3
-    .line()
-    .x((d, i) => xScale(i))
-    .y((d) => yScale(d.runCount))
-    .curve(d3.curveLinear);
-  const newline = d3
-    .line()
-    .x((d, i) => xScale(i))
-    .y((d) => yScale(d.newPlayerCount))
-    .curve(d3.curveLinear);
-
-  const yTicks = yScale.ticks().map((y) => ({
-    y: yScale(y),
-    label: y,
-  }));
-
-  useEffect(() => {
-    if (monthlyStatistics == null || monthlyStatistics.length === 0) {
-      return;
-    }
-
-    const svg = d3.select(svgRef.current);
-    const svgContent = svg.select(".content");
-    const drawScale = currentZoom ? currentZoom.rescaleX(xScale) : xScale;
-
-    svgContent
-      .select(".line")
-      .data([monthlyStatistics])
-      .join("path")
-      .attr("stroke", color.all.fill)
-      .attr("stroke-width", 1)
-      .attr("fill", "none")
-      .attr("opacity", color.all.opacity)
-      .attr("transform", `translate(${margin.left},${margin.top})`)
-      .attr(
-        "d",
-        d3
-          .line()
-          .x((d, i) => drawScale(i))
-          .y((d) => yScale(d.runCount))
-          .curve(d3.curveLinear),
-      );
-
-    svgContent
-      .select(".newline")
-      .data([monthlyStatistics])
-      .join("path")
-      .attr("stroke", color.new.fill)
-      .attr("stroke-width", 1)
-      .attr("opacity", color.new.opacity)
-      .attr("fill", "none")
-      .attr("transform", `translate(${margin.left},${margin.top})`)
-      .attr(
-        "d",
-        d3
-          .line()
-          .x((d, i) => drawScale(i))
-          .y((d) => yScale(d.newPlayerCount))
-          .curve(d3.curveLinear),
-      );
-
-    const xAxis = d3.axisBottom(drawScale).tickFormat((d) => {
-      if (
-        d >= monthlyStatistics.length ||
-        d < 0 ||
-        !Number.isInteger(d) ||
-        monthlyStatistics[d] == null
-      ) {
-        return "";
-      }
-      return `${monthlyStatistics[d].year}年${monthlyStatistics[d].month}月`;
-    });
-
-    svg
-      .select(".x-axis")
-      .attr("transform", `translate(${margin.left}, ${height - margin.bottom})`)
-      .call(xAxis);
-
-    const zoomBehavior = d3
-      .zoom()
-      .scaleExtent([1, 8])
-      .translateExtent([
-        [margin.left, margin.top],
-        [
-          width - margin.right - margin.left,
-          height - margin.bottom - margin.top,
-        ],
-      ])
-      .on("zoom", (event) => {
-        setCurrentZoom(event.transform);
-      });
-
-    svg.call(zoomBehavior);
-  }, [
-    currentZoom,
-    monthlyStatistics,
-    xScale,
-    yScale,
-    color,
-    margin,
-    width,
-    height,
-  ]);
+  const {
+    svgRef,
+    plotWidth,
+    plotHeight,
+    runLinePath,
+    newPlayerLinePath,
+    xTicks,
+    yTicks,
+  } = useZoomableLineChart({ monthlyStatistics, width, height, margin });
 
   if (monthlyStatistics == null) {
     return <p className="py-6 text-center text-slate-600">loading</p>;
@@ -154,16 +36,43 @@ function ZoomableLineChart({
               <rect
                 x={margin.left}
                 y={margin.top}
-                width={width - margin.left - margin.right}
-                height={height - margin.top - margin.bottom}
+                width={plotWidth}
+                height={plotHeight}
               />
             </clipPath>
           </defs>
           <g className="content" clipPath="url(#clip)">
-            <path className="line" d={line(monthlyStatistics)} />
-            <path className="newline" d={newline(monthlyStatistics)} />
+            <path
+              d={runLinePath}
+              transform={`translate(${margin.left}, ${margin.top})`}
+              stroke={color.all.fill}
+              strokeWidth={1}
+              opacity={color.all.opacity}
+              fill="none"
+            />
+            <path
+              d={newPlayerLinePath}
+              transform={`translate(${margin.left}, ${margin.top})`}
+              stroke={color.new.fill}
+              strokeWidth={1}
+              opacity={color.new.opacity}
+              fill="none"
+            />
           </g>
-          <g className="x-axis" />
+          <g
+            className="x-axis"
+            transform={`translate(${margin.left}, ${height - margin.bottom})`}
+          >
+            <path d={`M0,6V0H${plotWidth}`} fill="none" stroke="currentColor" />
+            {xTicks.map(({ x, label }) => (
+              <g key={label} transform={`translate(${x}, 0)`}>
+                <line y2={6} stroke="currentColor" />
+                <text y={9} dy="0.71em" fontSize={10} textAnchor="middle">
+                  {label}
+                </text>
+              </g>
+            ))}
+          </g>
           <g
             className="y-axis"
             transform={`translate(${margin.left}, ${margin.top})`}
@@ -172,12 +81,12 @@ function ZoomableLineChart({
               x1={0}
               y1={0}
               x2={0}
-              y2={height - margin.bottom - margin.top}
+              y2={plotHeight}
               stroke="black"
               strokeWidth={1}
             />
-            {yTicks.map((item, i) => (
-              <g key={i} transform={`translate(0, ${item.y})`}>
+            {yTicks.map((item) => (
+              <g key={item.label} transform={`translate(0, ${item.y})`}>
                 <line x1={0} y1={0} x2={-5} y2={0} stroke="black" />
                 <text
                   x={-10}
