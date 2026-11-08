@@ -30,12 +30,14 @@ pnpm dev
 - `src/hooks/useGameStatistics.js`: ゲーム検索の状態、取得、エラー処理
 - `src/hooks/useChartZoom.js`: SVG のズーム操作と状態管理
 - `src/chart/geometry.mjs`: 縮尺と折れ線の座標計算
+- `src/chart/summary.mjs`: 表示中の対象期間の整形
 - `src/chart/ticks.mjs`: X・Y 軸の目盛り位置とラベルの計算
 - `src/application/loadGameStatistics.mjs`: ゲーム検索から集計までのユースケース
 - `src/domain/monthlyRunStatistics.mjs`: 月別の記録数と初登場プレイヤー数の計算
 - `src/infrastructure/speedrunClient.mjs`: speedrun.com API との通信とデータ変換
 - `src/components/Selector.jsx`: ゲーム検索フォーム、候補選択 UI
-- `src/components/ZoomableLineChart.jsx`: 折れ線グラフの SVG 表示
+- `src/components/ZoomableLineChart.jsx`: 軸ラベル付き折れ線グラフの SVG 表示
+- `src/components/Legend.jsx`: 投稿記録数と初登場ユーザー数の凡例
 - `src/components/XAxis.jsx`・`src/components/YAxis.jsx`: 軸線と目盛りの表示
 - `src/style.css`: Tailwind CSS のエントリ（`@import "tailwindcss";`）
 

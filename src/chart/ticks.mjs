@@ -4,7 +4,7 @@ export function createXTicks(scale, monthlyStatistics) {
   }
 
   return scale
-    .ticks()
+    .ticks(6)
     .filter(
       (index) =>
         Number.isInteger(index) &&

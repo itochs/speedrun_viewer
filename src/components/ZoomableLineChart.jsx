@@ -9,7 +9,6 @@ function ZoomableLineChart({
   height,
   margin,
   color,
-  children,
 }) {
   const { svgRef, zoomTransform } = useChartZoom({
     monthlyStatistics,
@@ -44,7 +43,12 @@ function ZoomableLineChart({
   return (
     <div className="mt-4 select-none rounded-xl bg-cyan-50 p-3 ring-1 ring-cyan-200 sm:p-4">
       <div className="mx-auto w-full max-w-4xl">
-        <svg ref={svgRef} viewBox={`0 0 ${width} ${height}`}>
+        <svg
+          ref={svgRef}
+          viewBox={`0 0 ${width} ${height}`}
+          role="img"
+          aria-label="投稿日で集計した月別の投稿記録数と初登場ユーザー数の折れ線グラフ"
+        >
           <defs>
             <clipPath id="clip">
               <rect
@@ -59,17 +63,15 @@ function ZoomableLineChart({
             <path
               d={runLinePath}
               transform={`translate(${margin.left}, ${margin.top})`}
-              stroke={color.all.fill}
-              strokeWidth={1}
-              opacity={color.all.opacity}
+              stroke={color.runs}
+              strokeWidth={2}
               fill="none"
             />
             <path
               d={newPlayerLinePath}
               transform={`translate(${margin.left}, ${margin.top})`}
-              stroke={color.new.fill}
-              strokeWidth={1}
-              opacity={color.new.opacity}
+              stroke={color.firstSeen}
+              strokeWidth={2}
               fill="none"
             />
           </g>
@@ -81,7 +83,23 @@ function ZoomableLineChart({
             height={height}
           />
           <YAxis scale={yScale} plotHeight={plotHeight} margin={margin} />
-          <g>{children}</g>
+          <text
+            x={margin.left}
+            y={margin.top - 18}
+            fontSize={12}
+            fill={color.runs}
+          >
+            件 / 人
+          </text>
+          <text
+            x={margin.left + plotWidth / 2}
+            y={height - 8}
+            fontSize={12}
+            textAnchor="middle"
+            fill={color.runs}
+          >
+            投稿日（月）
+          </text>
         </svg>
       </div>
     </div>

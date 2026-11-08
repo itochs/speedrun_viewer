@@ -1,49 +1,25 @@
-function Legend({ width, margin, color }) {
-  const lwidth = 15;
-  const lheight = 15;
-  const padding = 10;
+function Legend({ color }) {
+  const items = [
+    { label: "投稿記録数（件）", stroke: color.runs },
+    { label: "初登場ユーザー数（人）", stroke: color.firstSeen },
+  ];
 
   return (
-    <g
-      transform={`translate(${width - margin.right + padding}, ${
-        margin.top + padding
-      })`}
+    <div
+      aria-label="グラフの凡例"
+      className="mt-4 flex flex-wrap gap-x-6 gap-y-2 text-sm font-medium text-slate-800"
     >
-      <g>
-        <rect
-          x={0}
-          y={0}
-          width={lwidth}
-          height={lheight}
-          fill={color.all.fill}
-          opacity={color.all.opacity}
-        />
-        <text
-          x={lwidth + padding}
-          textAnchor="start"
-          dominantBaseline="hanging"
-        >
-          All player
-        </text>
-      </g>
-      <g transform={`translate(0, ${lheight + padding})`}>
-        <rect
-          x={0}
-          y={0}
-          width={lwidth}
-          height={lheight}
-          fill={color.new.fill}
-          opacity={color.all.opacity}
-        />
-        <text
-          x={lwidth + padding}
-          textAnchor="start"
-          dominantBaseline="hanging"
-        >
-          First seen
-        </text>
-      </g>
-    </g>
+      {items.map(({ label, stroke }) => (
+        <div key={label} className="flex items-center gap-2">
+          <span
+            aria-hidden="true"
+            className="w-8 border-t-[3px]"
+            style={{ borderColor: stroke }}
+          />
+          <span>{label}</span>
+        </div>
+      ))}
+    </div>
   );
 }
 

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { formatLoadedPeriod } from "../chart/summary.mjs";
 import {
   loadGameStatistics,
   loadNextGameStatistics,
@@ -121,7 +122,10 @@ export function useGameStatistics(initialGameName = "super mario 64") {
     gameName,
     setGameName,
     games: result.games,
+    selectedGameName:
+      result.games?.find(({ id }) => id === result.gameId)?.name ?? null,
     monthlyStatistics: result.monthlyStatistics,
+    periodLabel: formatLoadedPeriod(result.monthlyStatistics),
     loadedCount: result.runs.length,
     hasNextPage: result.nextCursor != null,
     truncated: result.truncated,
